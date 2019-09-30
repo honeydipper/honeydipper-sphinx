@@ -1,0 +1,111 @@
+{{ title .current.Name }}
+{{ repeat (len .current.Name) "=" }}
+
+{{ .current.Description }}
+
+Installation
+------------
+
+Include the following section in your **init.yaml** under **repos** section::
+
+  - repo: {{ .current.Repo }}
+    {{- with .current.Branch }}
+    branch: {{ . }}
+    {{- end }}
+    {{- with .current.Path }}
+    path: {{ . }}
+    {{- end }}
+
+{{- with .current_repo.Drivers }}{{ with .daemon }}{{ with .drivers }}
+
+Drivers
+-------
+
+This repo provides following drivers
+
+{{- range $name, $driver := . }}
+
+{{ $name }}
+{{ repeat (len $name) "^" }}
+{{- with $driver.description }}
+
+{{ . }}
+{{- else }}
+
+No description is available for this driver.
+{{- end }}
+
+{{- with $driver.meta }}
+{{- range .rawEvents }}
+
+Event: {{ .name }}
+.......{{ repeat (len .name) "."}}
+{{- with .description }}
+
+{{ . }}
+{{- else }}
+
+No description is available for this rawEvent.
+{{- end }}
+
+{{- with .parameters }}
+
+**Parameters**
+
+{{ range . -}}
+:{{ .name }}: {{ .description }}
+{{ end }}
+
+{{- end }}
+
+{{- end }}
+{{- range .rawActions }}
+
+Action: {{ .name }}
+........{{ repeat (len .name) "." }}
+{{- with .description }}
+
+{{ . }}
+{{- else }}
+
+No description is available for this rawAction.
+{{- end }}
+
+{{- with .parameters }}
+
+**Parameters**
+
+{{ range . -}}
+:{{ .name }}: {{ .description }}
+{{ end }}
+
+{{- end }}
+
+{{- with .returns }}
+
+**Returns**
+
+{{ range . -}}
+:{{ .name }}: {{ .description }}
+{{ end }}
+
+{{- end }}
+
+{{- range .notes }}
+{{- if typeIs "string" . }}
+{{ . }}
+{{ else }}
+{{- with .example }}
+
+::
+
+{{ . | toYaml | indent 2 }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- end }}
+{{- end }}
+
+{{- end }}
+{{- end }}{{ end }}{{ end }}

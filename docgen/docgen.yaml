@@ -1,0 +1,53 @@
+---
+repos:
+  - repo: https://github.com/honeydipper/honeydipper-config-essentials
+    branch: DipperCL
+    name: essentials
+    description: The essential configurations to bootstrap Honeydipper
+
+  - repo: https://github.com/honeydipper/honeydipper-config-essentials
+    path: /gcloud
+    branch: DipperCL
+    name: gcloud
+    description: Contains drivers that interactive with gcloud assets
+
+  - repo: https://github.com/honeydipper/honeydipper-config-essentials
+    path: /datadog
+    branch: DipperCL
+    name: datadog
+    description: This repo offers a way to emit Honeydipper internal metrics to datadog
+
+items:
+  - name: index.rst
+    template: index.rst
+
+  - name: repos.rst
+    template: repos.rst
+
+  - name: '{{ .current.Name }}.rst'
+    template: repo.rst.tmpl
+    for_each: repos
+
+  - name: .
+    source: https://raw.githubusercontent.com/honeydipper/honeydipper/DipperCL
+    children:
+      - README.md => intro.md
+      - LICENSE => LICENSE.md
+      - CODE_OF_CONDUCT.md
+
+  - name: docs
+    source: https://raw.githubusercontent.com/honeydipper/honeydipper/DipperCL/docs
+    children:
+      - DevOpsSystemsAd-hocIntegrationMesh.png
+      - DevOpsSystemsHoneydipper.png
+      - DipperDaemon.png
+      - README.md
+      - INSTALL.md
+      - configuration.md
+      - interpolation.md
+      - developer.md
+      - workflow.md
+      - howtos/setup_local.md
+      - howtos/enable_encryption.md
+      - howtos/logging_verbosity.md
+      - howtos/reload_on_push.md
