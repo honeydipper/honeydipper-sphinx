@@ -36,7 +36,7 @@ contributed and maintained by communities. The seed of the repos is the
 ## Data Set
 
 `DataSet` is the building block of Honeydipper config. Every configuration file contains a `DataSet`. Once all files are loaded, all the
-`DataSet` will be merged a final `DataSet`. A `DataSet` is made up with one or more sections listed below.
+`DataSet` will be merged into a final `DataSet`. A `DataSet` is made up with one or more sections listed below.
 
 ```go
 // DataSet is a subset of configuration that can be assembled to the complete final configuration.
@@ -47,7 +47,7 @@ type DataSet struct {
 	Includes  []string               `json:"includes,omitempty"`
 	Repos     []RepoInfo             `json:"repos,omitempty"`
 	Workflows map[string]Workflow    `json:"workflows,omitempty"`
-  Contexts  map[string]interface{} `json:"contexts,omitempty"`
+	Contexts  map[string]interface{} `json:"contexts,omitempty"`
 }
 ```
 

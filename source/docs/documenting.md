@@ -230,7 +230,7 @@ notes:
       rules:
         - when: ...
           do: ...
-  - exampole: |
+  - example: |
       func dosomething() {
       }
     type: go
