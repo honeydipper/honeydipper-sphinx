@@ -1,111 +1,126 @@
-{{ title .current.Name }}
-{{ repeat (len .current.Name) "=" }}
+{{ include "libs.tmpl" }}
+{{- title .current.Name }}
+{{ repeat (len .current.Name) "*" }}
 
 {{ .current.Description }}
 
 Installation
-------------
+============
 
-Include the following section in your **init.yaml** under **repos** section::
+Include the following section in your **init.yaml** under **repos** section
 
-  - repo: {{ .current.Repo }}
-    {{- with .current.Branch }}
-    branch: {{ . }}
-    {{- end }}
-    {{- with .current.Path }}
-    path: {{ . }}
-    {{- end }}
+.. code-block:: yaml
+
+   - repo: {{ .current.Repo }}
+     {{- with .current.Branch }}
+     branch: {{ . }}
+     {{- end }}
+     {{- with .current.Path }}
+     path: {{ . }}
+     {{- end }}
 
 {{- with .current_repo.Drivers }}{{ with .daemon }}{{ with .drivers }}
 
 Drivers
--------
+=======
 
 This repo provides following drivers
 
-{{- range $name, $driver := . }}
+{{-   range $name, $driver := . }}
 
 {{ $name }}
-{{ repeat (len $name) "^" }}
-{{- with $driver.description }}
+{{ repeat (len $name) "-" }}
+{{-     template "description" $driver }}
+{{-     with $driver.meta }}
+{{-       with .configurations }}
 
-{{ . }}
-{{- else }}
+**Configurations**
+{{-         range . }}
 
-No description is available for this driver.
-{{- end }}
-
-{{- with $driver.meta }}
-{{- range .rawEvents }}
-
-Event: {{ .name }}
-.......{{ repeat (len .name) "."}}
-{{- with .description }}
-
-{{ . }}
-{{- else }}
-
-No description is available for this rawEvent.
-{{- end }}
-
-{{- with .parameters }}
-
-**Parameters**
-
-{{ range . -}}
 :{{ .name }}: {{ .description }}
-{{ end }}
-
-{{- end }}
-
-{{- end }}
-{{- range .rawActions }}
-
-Action: {{ .name }}
-........{{ repeat (len .name) "." }}
-{{- with .description }}
-
-{{ . }}
-{{- else }}
-
-No description is available for this rawAction.
-{{- end }}
-
-{{- with .parameters }}
-
-**Parameters**
-
-{{ range . -}}
-:{{ .name }}: {{ .description }}
-{{ end }}
-
-{{- end }}
-
-{{- with .returns }}
-
-**Returns**
-
-{{ range . -}}
-:{{ .name }}: {{ .description }}
-{{ end }}
-
-{{- end }}
-
-{{- range .notes }}
-{{- if typeIs "string" . }}
-{{ . }}
-{{ else }}
-{{- with .example }}
-
-::
-
-{{ . | toYaml | indent 2 }}
-{{- end }}
-{{- end }}
-{{- end }}
-
-{{- end }}
-{{- end }}
-
-{{- end }}
+{{-         end }}
+{{-       end }}
+{{-       template "optional_notes" .notes }}
+{{-       range .rawEvents }}
+{{-         template "rawEntry" (list "Event" .) }}
+{{-       end }}
+{{-       range .rawActions }}
+{{-         template "rawEntry" (list "Action" .) }}
+{{-       end }}
+{{-       range .RPCs }}
+{{-         template "rawEntry" (list "RPC" .) }}
+{{-       end }}
+{{-     end }}
+{{-   end }}
 {{- end }}{{ end }}{{ end }}
+
+{{- with .current_repo.Systems }}
+
+Systems
+=======
+
+{{-   range $name, $system := . }}
+
+{{ $name }}
+{{ repeat (len $name) "-" }}
+
+{{-     template "description" . }}
+
+{{-     with .Meta }}
+{{-       with .configurations }}
+
+**Configurations**
+{{-         range . }}
+
+:{{ .name }}: {{ .description }}
+{{-         end }}
+{{-       end }}
+{{-       template "optional_notes" .notes }}
+{{-     end }}
+
+{{-     range $n, $trigger := $system.Triggers }}
+{{-       template "structEntry" (list "Trigger" $trigger $n) }}
+{{-     end }}
+
+{{-     range $n, $function := $system.Functions }}
+{{-       template "structEntry" (list "Function" $function $n) }}
+{{-     end }}
+{{-   end }}
+{{- end }}
+
+{{- with .current_repo.Workflows }}
+
+Workflows
+=========
+
+{{-   range $name, $workflow := . }}
+
+{{ $name }}
+{{ repeat (len $name) "-" }}
+
+{{-     template "description" . }}
+
+{{-     with .Meta }}
+{{-       with .inputs }}
+
+**Input Contexts**
+{{-         range . }}
+
+:{{ .name }}: {{ .description }}
+{{-         end }}
+{{-       end }}
+
+{{-       with .exports }}
+
+**Export Contexts**
+{{-         range . }}
+
+:{{ .name }}: {{ .description }}
+{{-         end }}
+{{-       end }}
+
+{{-       template "optional_notes" .notes }}
+{{-     end }}
+{{-   end }}
+{{- end }}
+

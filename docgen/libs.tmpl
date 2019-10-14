@@ -1,0 +1,156 @@
+{{- define "description" }}
+{{-   if kindIs "map" . }}
+{{-     template "description_map" . }}
+{{-   else }}
+{{-     template "description_struct" . }}
+{{-   end }}
+{{- end }}
+
+
+
+{{- define "description_map" }}
+{{-   if and (empty .description) (empty .meta) }}
+
+No description is available for this entry!
+{{-   end }}
+{{-   template "optional_notes" .description }}
+{{-   with .meta }}
+{{-     template "optional_notes" .description }}
+{{-   end }}
+{{- end }}
+
+
+
+{{- define "description_struct" }}
+{{-   if and (empty .Description) (empty .Meta) }}
+
+No description is available for this entry!
+{{-   end }}
+{{-   template "optional_notes" .Description }}
+{{-   with .Meta }}
+{{-     template "optional_notes" .description }}
+{{-   end }}
+{{- end }}
+
+
+
+{{- define "notes" }}
+{{-   if  empty . }}
+
+No notes is available for this entry.
+{{-   else }}
+
+{{      template "optional_notes" . }}
+{{-   end }}
+{{- end }}
+
+
+
+{{- define "optional_notes" }}
+{{-   if not (empty .) }}
+{{-     if typeIs "string" . }}
+
+{{ . }}
+{{-     else }}
+{{-       range . }}
+{{-         if typeIs "string" . }}
+
+{{ . }}
+{{-         else if not (empty .highlight) }}
+
+.. {{ default "important" .type }}::
+   {{ .highlight }}
+
+{{-         else }}
+{{-           if not (empty .example) }}
+
+.. code-block:: {{ default "yaml" .type }}
+
+{{ typeIs "string" .example | ternary .example  (toYaml .example) | indent 3 }}
+{{-           end }}
+{{-         end }}
+{{-       end }}
+{{-     end }}
+{{-   end }}
+{{- end }}
+
+
+
+{{- define "rawEntry" }}
+
+{{    index . 0 }}:
+{{-   with index . 1 }} {{ .name }}
+^^^^^^^^{{ repeat (len .name) `^` }}
+
+{{-     template "optional_notes" .description }}
+
+{{-     with .parameters }}
+
+**Parameters**
+{{-        range . }}
+
+:{{ .name }}: {{ .description }}
+{{-        end }}
+{{-     end }}
+
+{{-     with .returns }}
+
+**Returns**
+{{-       range . }}
+
+:{{ .name }}: {{ .description }}
+{{-       end }}
+{{-     end }}
+
+{{-     template "optional_notes" .notes }}
+
+{{-   end }}
+{{- end }}
+
+
+
+{{- define "structEntry" }}
+
+{{    index . 0 }}: {{ index . 2 }}
+{{ repeat (add (index . 0 | len) (index . 2 | len)  2 | int) "^" }}
+
+{{-   with index . 1 }}
+
+{{-     template "description" . }}
+
+{{-     with .Meta }}
+{{-       with .matching_parameters }}
+
+**Matching Parameters**
+{{-         range . }}
+
+:{{ .name }}: {{ .description }}
+{{-         end }}
+{{-       end }}
+
+{{-       with .inputs }}
+
+**Input Contexts**
+
+{{-         range . }}
+
+:{{ .name }}: {{ .description }}
+{{-          end }}
+{{-       end }}
+
+{{-       with .exports }}
+
+**Export Contexts**
+
+{{-         range . }}
+
+:{{ .name }}: {{ .description }}
+{{-         end }}
+{{-       end }}
+
+{{-       template "optional_notes" .notes }}
+
+{{-     end }}
+{{-   end }}
+{{- end }}
+

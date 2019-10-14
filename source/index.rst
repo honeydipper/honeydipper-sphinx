@@ -3,19 +3,23 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Honeydipper Configuration Guide
-===============================
+Honeydipper
+###########
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 3
+   :caption: Honeydipper
 
-   Introduction <intro>
-   repos
+   Introduction <README>
+   tutorials
+   howtos
 
-Indices and tables
-==================
+.. toctree::
+   :maxdepth: 3
+   :caption: Community Repos
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   
+   Essentials <essentials>
+   Gcloud <gcloud>
+   Datadog <datadog>
+

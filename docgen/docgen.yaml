@@ -21,8 +21,11 @@ items:
   - name: index.rst
     template: index.rst
 
-  - name: repos.rst
-    template: repos.rst
+  - name: tutorials.rst
+    template: tutorials.rst
+
+  - name: howtos.rst
+    template: howtos.rst
 
   - name: '{{ .current.Name }}.rst'
     template: repo.rst.tmpl
@@ -31,7 +34,7 @@ items:
   - name: .
     source: https://raw.githubusercontent.com/honeydipper/honeydipper/DipperCL
     children:
-      - README.md => intro.md
+      - README.md
       - LICENSE => LICENSE.md
       - CODE_OF_CONDUCT.md
 
@@ -47,6 +50,7 @@ items:
       - interpolation.md
       - developer.md
       - workflow.md
+      - documenting.md
       - howtos/setup_local.md
       - howtos/enable_encryption.md
       - howtos/logging_verbosity.md
