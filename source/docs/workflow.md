@@ -39,7 +39,7 @@
 ## Composing Workflows
 `workflow` defines what to do and how to perform when an event is triggered. `workflow` can be defined in rules directly in the `do` section, or it can be defined independently with a name so it can be re-used/shared among multiple rules and workflows. A `workflow` can be as simple as invoking a single driver `rawAction`. It can also contains complicate logics, procedures dealing with various scenarios. All `workflows` are built with the same building blocks, follow the same process, and they can be stacked/combined with each other to achieve more complicated goals.
 
-An example of a workflow defined in a rule calling an rawAction:
+An example of a workflow defined in a rule calling an `rawAction`:
 
 ```yaml
 ---
@@ -81,15 +81,15 @@ There are 4 types of simple actions that a workflow can perform.
 
  - `call_workflow`: calling out to another named workflow, taking a string specifying the name of the workflow
  - `call_function`: calling a predefined system function, taking a string in the form of `system.function`
- - `call_driver`: calling a rawAction offered by a driver, taking a string in the form of `driver.rawAction`
- - `wait`: wait for the specified amount of time or recieve a wake-up request with a matching token. The time should be formatted according to the requirement for function [ParseDuration](https://golang.org/pkg/time/#ParseDuration). A unit suffix is required.
+ - `call_driver`: calling a `rawAction` offered by a driver, taking a string in the form of `driver.rawAction`
+ - `wait`: wait for the specified amount of time or receive a wake-up request with a matching token. The time should be formatted according to the requirement for function [ParseDuration](https://golang.org/pkg/time/#ParseDuration). A unit suffix is required.
 
 They can not be combined.
 
 A function can also have no action at all. `{}` is a perfectly legit no-op workflow.
 
 ### Complex Actions
-Complex actions are groups of mulitple `workflows` organized together to do some complex work.
+Complex actions are groups of multiple `workflows` organized together to do some complex work.
 
  - `steps`: an array of child workflows that are executed in sequence
  - `threads`: an array of child workflows that are executed in parallel
@@ -97,13 +97,14 @@ Complex actions are groups of mulitple `workflows` organized together to do some
 
 These can not be combined with each other or with any of the simple actions.
 
-When using `steps` or `threads`, you can control the behavior of the workflow upon `failure` or `error` status through fields `on_failure` or `on_error`.  The allowed values are `continue` and `exit`. By default, `on_failure` is set to `continue` while `on_error` is set to `exit`. When using `threads`, `exit` means that when one thread returns error, the workflow returns without waiting for other threads to return.
+When using `steps` or `threads`, you can control the behaviour of the workflow upon `failure` or `error` status through fields `on_failure` or `on_error`.  The allowed values are `continue` and `exit`. By default, `on_failure` is set to `continue` while `on_error` is set to `exit`. When using `threads`, `exit` means that when one thread returns error, the workflow returns without waiting for other threads to return.
 
 ### Iterations
 Any of the actions can be combined with an `iterate` or `iterate_parallel` field to be executed multiple times with different values from a list. The current element of the list will be stored in a local contextual data item named `current`. Optionally, you can also customize the name of contextual data item using `iterate_as`. The elements of the lists to be iterated don't have to be simple strings, it can be a map or other complex data structures.
 
 For example:
 
+<!-- {% raw %} -->
 ```yaml
 ---
 workflows:
@@ -117,14 +118,15 @@ workflows:
     with:
       message: '{{ .ctx.current.name }} is playing the role of `{{ .ctx.current.role }}`.'
 ```
+<!-- {% endraw %} -->
 
 ### Conditions
 We can also specify the conditions that the workflow checks before taking any action.
 
  - `if_match/unless_match`: specify the skeleton data to match the contextual data
- - `if/unless/if_any/unless/unless_all`: specify the list of strings that intepolate to truy/falsy values
+ - `if/unless/if_any/unless/unless_all`: specify the list of strings that interpolate to truy/falsy values
 
-Some examples for using skeletion data matching:
+Some examples for using skeleton data matching:
 ```yaml
 ---
 workflows:
@@ -161,6 +163,7 @@ workflows:
 Please note how we use regular expression, list of options to match the contextual data, and how to match a field deep into the data structure.
 
 Below are some examples of using list of conditions:
+<!-- {% raw %} -->
 ```yaml
 ---
 workflows:
@@ -180,15 +183,17 @@ workflows:
     with:
       message: at least one of `exits` or `also` is not empty
 ```
+<!-- {% endraw %} -->
 
 ### Looping
 We can also repeat the actions in the workflow through looping fields
 
- - `while`: specify a list of strings that intepolate into truy/falsy values
- - `until`: specify a list of strings that intepolate into truy/falsy values
+ - `while`: specify a list of strings that interpolate into truy/falsy values
+ - `until`: specify a list of strings that interpolate into truy/falsy values
     
 For example:
 
+<!-- {% raw %} -->
 ```yaml
 ---
 workflows:
@@ -230,9 +235,10 @@ workflows:
       - count
       - backoff
 ```
+<!-- {% endraw %} -->
 
 ### Hooks
-Hooks are child workflows executed at a specified moments in the parent workflow's lifecycle. It is a great way to separate auxilary work, such as sending heartbeat, sending slack messages, making an announcement, cleanup, data preparation etc., from the actual work. Hooks are defined through context data, so it can be pulled in through predefined contexts, which makes the actual workflow seems less cluttered.
+Hooks are child workflows executed at a specified moments in the parent workflow's lifecycle. It is a great way to separate auxiliary work, such as sending heartbeat, sending slack messages, making an announcement, clean up, data preparation etc., from the actual work. Hooks are defined through context data, so it can be pulled in through predefined contexts, which makes the actual workflow seems less cluttered.
 
 For example,
 ```yaml
@@ -280,7 +286,7 @@ The supported hooks:
 Contextual data is the key to stitch different events, functions, drivers and workflows together.
 
 ### Sources
-Every workflow receives contextual dato from a few sources:
+Every workflow receives contextual data from a few sources:
 
  * Exported from the event
  * Inherit context from parent workflow
@@ -288,7 +294,7 @@ Every workflow receives contextual dato from a few sources:
  * Local context data defined in `with` field
  * Exported from previous steps of the workflow
 
-Since the data are received in that particular order listed above, the later source can override data from previous sources. Child workflow context data is independent from parent workflow, anything defined in `with` or inherited will only be in effect during the life cycle of current workflow, except the exported data. Once a field is exported, it will be available to all outter workflows. You can override this by specifying the list of fields that you don't want to export.
+Since the data are received in that particular order listed above, the later source can override data from previous sources. Child workflow context data is independent from parent workflow, anything defined in `with` or inherited will only be in effect during the life cycle of current workflow, except the exported data. Once a field is exported, it will be available to all outer workflows. You can override this by specifying the list of fields that you don't want to export.
 
 Pay attention to the example `retry_func_count_with_exp_backoff` in the previous section. In order to not contaminate parent context with temporary fields, we use `no_export` to block the exporting of certain fields.
 
@@ -297,10 +303,10 @@ We can use interpolation in workflows to make the workflow flexible and versatil
 
  * `labels` - string values attached to latest received dipper Message indicating session status, IDs, etc.,
  * `ctx` - contextual data,
- * `event` - raw unexported event data from the original event that triggered the workflow
- * `data` - raw unexported payload from the latest received dipper message
+ * `event` - raw unexposed event data from the original event that triggered the workflow
+ * `data` - raw unexposed payload from the latest received dipper message
 
-It is recommended to avoid using `event` and `data` in workflows, and stick to `ctx` as much as possible. The raw unexported data might eventually be deprecated and hidden. They may still be available in `system` definition.
+It is recommended to avoid using `event` and `data` in workflows, and stick to `ctx` as much as possible. The raw unexposed data might eventually be deprecated and hidden. They may still be available in `system` definition.
 
 *DipperCL* provides following ways of interpolation:
 
@@ -315,7 +321,7 @@ See [interpolation guide](./interpolation.html) for detail on how to use interpo
 ### Merging Modifier
 When data from different data source is merged, by default, map structure is deeply merged, while all other type of data with the same name is replaced by the newer source. One exception is that if the data in the new source is not the same type of the existing data, the old data stays in that case.
 
-For example, undesired merge behavior:
+For example, undesired merge behaviour:
 ```yaml
 ---
 workflows
@@ -353,7 +359,7 @@ data: # final
   foo_param: "a string"
 ```
 
-We can change the behavior by using merging modifiers at the end of the overriding data names.
+We can change the behaviour by using merging modifiers at the end of the overriding data names.
 
 Usage:
 
@@ -379,18 +385,18 @@ Sending a chat message using configured system. The chat system can be anything 
 
 ### `workflow_announcement`
 
-This workflow is intended to be invoked through `on_first_action` hook to send a chat message to annouce what will happen.
+This workflow is intended to be invoked through `on_first_action` hook to send a chat message to announce what will happen.
 
 *Required context fields*
  * `chat_system`: system used for sending the message, by default `slack_bot`
  * `notify`: a list of recipients, slack channel names if using `slack_bot`
- * `_meta_event`: every events export a `_meta_event` showing the driver name and the trigger name, can be overriden in trigger definition
+ * `_meta_event`: every events export a `_meta_event` showing the driver name and the trigger name, can be overridden in trigger definition
  * `_event_id`: if you export a `_event_id` in your trigger definition, it will be used for display, by default it will be `unspecified`
  * `_event_url`: the display of the `_event_id` will be a link to this url, by default `http://honeydipper.io`
  * `_event_detail`: if specified, will be displayed after the brief announcement
  
 Besides the fields above, this workflow also uses a few context fields that are set internally from host workflow(not the hook itself) definition.
- * `_meta_desc`: the `description` from the workflow definiton
+ * `_meta_desc`: the `description` from the workflow definition
  * `_meta_name`: the `name` from the workflow definition
  * `performing`: what the workflow is currently performing
 
@@ -404,7 +410,7 @@ This workflow is intended to be invoked through `on_exit`, `on_error`, `on_succe
  * `status_detail`: if available, the detail will be attached to the status notification message
 
 Besides the fields above, this workflow also uses a few context fields and `labels` that are set internally from host workflow(not the hook itself).
- * `_meta_desc`: the `description` from the workflow definiton
+ * `_meta_desc`: the `description` from the workflow definition
  * `_meta_name`: the `name` from the workflow definition
  * `performing`: what the workflow is currently performing
  * `.labels.status`: the latest function return status
@@ -412,7 +418,7 @@ Besides the fields above, this workflow also uses a few context fields and `labe
  
 ### `send_heartbeat`
 
-This workflow can be used in `on_success` hooks or as a standalone step. It sends a heartbeat to the alerting system
+This workflow can be used in `on_success` hooks or as a stand-alone step. It sends a heartbeat to the alerting system
 
 *Required context fields*
  * `alert_system`: system used for sending the heartbeat, can be any system that implements a `heartbeat` function, by default `opsgenie`
@@ -420,13 +426,13 @@ This workflow can be used in `on_success` hooks or as a standalone step. It send
 
 ### `snooze_alert`
 
-This workflow can be used in `on_success` hooks or as a standalone step. It snooze the alert that triggered the workflow.
+This workflow can be used in `on_success` hooks or as a stand-alone step. It snooze the alert that triggered the workflow.
  * `alert_system`: system used for sending the heartbeat, can be any system that implements a `snooze` function, by default `opsgenie`
  * `alert_Id`: the ID of the alert
 
 ## Running a Kubernetes Job
 
-We can use a predfined `run_kubernetes` workflow from `honeydipper-config-essentials` repo to run kubernetes jobs. A simple example is below
+We can use a predefined `run_kubernetes` workflow from `honeydipper-config-essentials` repo to run kubernetes jobs. A simple example is below
 
 ```yaml
 ---
@@ -447,7 +453,7 @@ workflows:
 
 `run_kubernetes` workflow requires a `system` context field that points to a predefined system. The system must be extended from `kubernetes` system so that it has `createJob`, `waitForJob` and `getJobLog` function defined. The predefined system should also have the information required to connect to the kubernetes cluster, the namespace to use etc.
 
-The required `steps` context field should tell the workflow what containters to define in the kubernetes job.  If there are more that one step, the steps before the last step are all defined in `initContainters` section of the pod, and the last step is defined in `containers`.
+The required `steps` context field should tell the workflow what containers to define in the kubernetes job.  If there are more that one step, the steps before the last step are all defined in `initContainters` section of the pod, and the last step is defined in `containers`.
 
 Each step of the job has its type, which defines what docker image to use. The workflow comes with a few types predefined.
  * python
@@ -482,13 +488,13 @@ workflows:
 
 The first step uses the `command` to directly passing a python command or script to the container, while the second step uses `shell` to run a script using the same container image.
 
-There is a shared `emptyDir` volumes mounted at `/honeydipper` to every step, so that the steps can use the shared storage to pass on information. One thing to be noted is that the steps don't honor the default `WORKDIR` defined in the image, instead all the steps are using `/honeydipper` as `workingDir` in the container `spec`. This can be custimized using `workingDir` in the step definition itself.
+There is a shared `emptyDir` volumes mounted at `/honeydipper` to every step, so that the steps can use the shared storage to pass on information. One thing to be noted is that the steps don't honour the default `WORKDIR` defined in the image, instead all the steps are using `/honeydipper` as `workingDir` in the container `spec`. This can be customized using `workingDir` in the step definition itself.
 
 The workflow will return `success` in `.labels.status` when the job finishes successfully. If it fails to create a job or fails to get the status or job output, the status will be `error`. If the job is created, but failed to complete or return non-zero status code, the `.labels.status` will be set to `failure`. The workflow will export a `log` context field that contains a map from pod name to a map of container name to log output. A simple string version of the output that contains all the concatenated logs are exported as `output` context field.
 
 ### Environment Variables and Volumes
 
-You can define environemnts and volumes to be used in each step or as a global context field to share them across steps. For example,
+You can define environments and volumes to be used in each step or as a global context field to share them across steps. For example,
 
 ```yaml
 ---
@@ -559,7 +565,7 @@ Pay attention to `use` field of the step.
 
 ### Expanding `run_kubernetes`
 
-If `run_kubernetes` only supports builtin types or predefined steps, it won't be too useful in a lot of places. Luckily, it is very easy to expand the workflow to support more things.
+If `run_kubernetes` only supports built-in types or predefined steps, it won't be too useful in a lot of places. Luckily, it is very easy to expand the workflow to support more things.
 
 To add a new step type, just extend the `_default` context under `start_kube_job` in the `script_types` field.
 
@@ -580,7 +586,7 @@ Supported fields in a type:
 
  * `image` - the image to use for this type
  * `shell_entry` - the customized entrypoint if you want to run shell script with this image
- * `shell_prefix` - a list of strings to be placed in `args` of the container `spec` before the actuall `shell` script
+ * `shell_prefix` - a list of strings to be placed in `args` of the container `spec` before the actual `shell` script
  * `command_entry` - in case you want to customize the entrypoint for using `command`
  * `command_prefix` - a list of strings to be placed in `args` before `command`
 
@@ -588,6 +594,7 @@ Similarly, to add a new predefined step, extend the `predefined_steps` field in 
 
 For example, to add a rclone step
 
+<!-- {% raw %} -->
 ```yaml
 ---
 contexts:
@@ -611,6 +618,7 @@ contexts:
                   defaultMode: 420
                   secretName: rclone-conf-with-ca
 ```
+<!-- {% endraw %} -->
 
 See [Defining steps](#basic-of-run_kubernetes) on how to define a step
 
@@ -623,6 +631,7 @@ GKE is a google managed kubernetes cluster service. You can use `run_kubernetes`
 If the context variable `google_credentials_secret` is defined, this workflow will add a step in the `steps` list to activate the service account. The service account must exist in the kubernetes cluster as a secret, the service account key can be specified using `google_credentials_secret_key` and defaults to `service-account.json`. This is a great way to run your job with a service account other than the default account defined through the GKE node pool. This step has to be executed before you call `run_kubernetes`, and the following `steps` in the job have to be added through [append modifier](#merging-modifier).
 
 For example:
+<!-- {% raw %} -->
 ```yaml
 ---
 workflows:
@@ -635,12 +644,14 @@ workflows:
             - type: gcloud
               shell: gcloud container clusters create {{ .ctx.new_cluster_name }}
 ```
+<!-- {% endraw %} -->
 
  * **`use_gcloud_kubeconfig` workflow**
 
 This workflow is used for adding a step to run `gcloud container clusters get-credentials` to fetch the kubeconfig data for GKE clusters. This step requires that the `cluster` context variable is defined and describing a GKE cluster with fields like `project`, `cluster`, `zone` or `region`.
 
 For example:
+<!-- {% raw %} -->
 ```yaml
 ---
 workflows:
@@ -660,12 +671,14 @@ workflows:
             - type: gcloud
               shell: kubectl delete jobs {{ .ctx.job_name }}
 ```
+<!-- {% endraw %} -->
 
  * **`use_local_kubeconfig` workflow**
 
 This workflow is used for adding a step to clear the kubeconfig file so `kubectl` can use default in-cluster setting to work on local cluster.
 
 For example:
+<!-- {% raw %} -->
 ```yaml
 ---
 workflows:
@@ -689,6 +702,7 @@ workflows:
             - type: gcloud
               shell: kubectl apply -f kubernetes.yaml
 ```
+<!-- {% endraw %} -->
 
 ## Slash Commands
 
@@ -718,7 +732,7 @@ Replace the content in `<>` with your own content.
 
 ### Mapping Parameters
 
-Most workflows expect certain context variables to be available in order to function, for example, you may need to specify which DB to backup or restore using a `DB` context variable when invoking a backup/restore workflow. When a slash command is defined, a `parameters` context variable is made available as a string that can be accessed through `$ctx.parameters` using path interpolation or `{{ .ctx.parameters }}` in go templates. We can use the `_slashcommands` context to transform the `parameters` context variable into the actual variables the workflow requires.
+Most workflows expect certain context variables to be available in order to function, for example, you may need to specify which DB to backup or restore using a `DB` context variable when invoking a backup/restore workflow. When a slash command is defined, a `parameters` context variable is made available as a string that can be accessed through `$ctx.parameters` using path interpolation or <!-- {% raw %} -->`{{ .ctx.parameters }}`<!-- {% endraw %} --> in go templates. We can use the `_slashcommands` context to transform the `parameters` context variable into the actual variables the workflow requires.
 
 For an simple example,
 ```yaml
@@ -735,6 +749,7 @@ contexts:
 ```
 
 In case you want a list of words,
+<!-- {% raw %} -->
 ```yaml
 contexts:
   _slashcommands:
@@ -747,8 +762,10 @@ contexts:
     greeting: # here is the context applied to the greeting workflow
       greeters: :yaml:{{ splitList " " .ctx.parameters }} # this generates a list
 ```
+<!-- {% endraw %} -->
 
 Some complex example, command with subcommands
+<!-- {% raw %} -->
 ```yaml
 contexts:
   _slashcommands:
@@ -763,6 +780,7 @@ contexts:
       name: '{{ splitList " " .ctx.parameters | rest | first }}'
       jobParams: ':yaml:{{ splitList " " .ctx.parameters | slice 2 | toJson }}'
 ```
+<!-- {% endraw %} -->
 
 ### Messages and notifications
 

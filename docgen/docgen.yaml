@@ -1,19 +1,16 @@
 ---
 repos:
   - repo: https://github.com/honeydipper/honeydipper-config-essentials
-    branch: DipperCL
     name: essentials
     description: The essential configurations to bootstrap Honeydipper
 
   - repo: https://github.com/honeydipper/honeydipper-config-essentials
     path: /gcloud
-    branch: DipperCL
     name: gcloud
     description: Contains drivers that interactive with gcloud assets
 
   - repo: https://github.com/honeydipper/honeydipper-config-essentials
     path: /datadog
-    branch: DipperCL
     name: datadog
     description: This repo offers a way to emit Honeydipper internal metrics to datadog
 
@@ -32,14 +29,14 @@ items:
     for_each: repos
 
   - name: .
-    source: https://raw.githubusercontent.com/honeydipper/honeydipper/DipperCL
+    source: https://raw.githubusercontent.com/honeydipper/honeydipper/master
     children:
       - README.md
       - LICENSE => LICENSE.md
       - CODE_OF_CONDUCT.md
 
   - name: docs
-    source: https://raw.githubusercontent.com/honeydipper/honeydipper/DipperCL/docs
+    source: https://raw.githubusercontent.com/honeydipper/honeydipper/master/docs
     children:
       - DevOpsSystemsAd-hocIntegrationMesh.png
       - DevOpsSystemsHoneydipper.png

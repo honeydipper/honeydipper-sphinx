@@ -2,7 +2,7 @@
 
 ## Setup Go environment
 
- * Setup a directory as your go work directory and add it to GOPATH. Assuming go 1.11 or up is installed, gvm is recommended to manage multiple versions of go. You may want to persist the GOPATH in your bash_profile
+ * Setup a directory as your go work directory and add it to GOPATH. Assuming go 1.13.1 or up is installed, gvm is recommended to manage multiple versions of go. You may want to persist the GOPATH in your bash_profile
 
 ```bash
 mkdir ~/go
@@ -84,7 +84,7 @@ git add init.yaml
 git commit -m 'init' -a
 ```
 
-## Start honeydipper daemon
+## Start Honeydipper daemon
 
 Before you start your Honeydipper daemon, you need:
 

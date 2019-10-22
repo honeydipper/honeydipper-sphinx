@@ -11,7 +11,6 @@ Include the following section in your **init.yaml** under **repos** section
 .. code-block:: yaml
 
    - repo: https://github.com/honeydipper/honeydipper-config-essentials
-     branch: DipperCL
      path: /gcloud
 
 Drivers
