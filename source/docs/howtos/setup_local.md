@@ -10,18 +10,16 @@ export GOPATH=$GOPATH:$PWD/go
 export PATH=$PATH:$GOPATH/bin
 ```
 
- * Clone the code
+## Clone the code
 
 ```bash
 go get github.com/honeydipper/honeydipper
 ```
 
- * Load the dependencies
+or 
 
-```bash
-brew install dep
-cd ~/go/src/github.com/honeydipper/honeydipper
-dep ensure
+```sh
+git clone https://github.com/honeydipper/honeydipper.git
 ```
 
 ## Build and test
@@ -29,7 +27,7 @@ dep ensure
  * Build
 
 ```bash
-go install ./...
+go install -v ./...
 ```
 
  * Run test
@@ -75,10 +73,9 @@ drivers:
 rules:
   - when:
       driver: webhook
-      conditions:
+      if_match:
         url: /health
-    do:
-      content: noop
+    do: {}
 EOF
 git add init.yaml
 git commit -m 'init' -a

@@ -1199,6 +1199,36 @@ See below for example
            heartbeat: test-heart-beat
    
 
+Function: schedules
+^^^^^^^^^^^^^^^^^^^
+
+This function list all on-call schedules or fetch a schedule detail if given a schedule identifier.
+
+.. important::
+   This function only fetches first 100 schedules when listing.
+
+**Input Contexts**
+
+:scheduleId: The name or ID or the schedule of interest; if missing, list all schedules.
+
+:scheduleIdType: The type of the identifier, :code:`name` or :code:`id`.
+
+**Export Contexts**
+
+:schedule: For fetching detail, the data structure that contains the schedule detail
+
+:schedules: For listing, a list of data structure contains the schedule details
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   workflows:
+     steps:
+       - call_function: opsgenie.schedules
+   
+
 Function: snooze
 ^^^^^^^^^^^^^^^^
 
@@ -1230,6 +1260,72 @@ See below for example
            alert_message: :regex:test-alert
          call_function: opsgenie.snooze
          #  alert_Id is exported from the event
+   
+
+Function: users
+^^^^^^^^^^^^^^^
+
+This function gets the user detail with a given ID or list all users
+
+**Input Contexts**
+
+:userId: The ID of the user for which to get details; if missing, list users
+
+:offset: Number of users to skip from start, used for paging
+
+:query: :code:`Field:value` combinations with most of user fields to make more advanced searches. Possible fields are :code:`username`, :code:`fullName blocked`, :code:`verified`, :code:`role`, :code:`locale`, :code:`timeZone`, :code:`userAddress` and :code:`createdAt`
+
+:order: The direction of the sorting, :code:`asc` or :code:`desc`, default is :code:`asc`
+
+:sort: The field used for sorting the result, could be :code:`username`, :code:`fullname` or :code:`insertedAt`.
+
+**Export Contexts**
+
+:user: The detail of user in a map, or a list of users
+
+:users: The detail of user in a map, or a list of users
+
+:opsgenie_offset: The offset that can be used for continue fetching the rest of the users, for paging
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   workflows:
+     steps:
+       - call_function: opsgenie.users
+         with:
+           query: username:foobar
+   
+
+Function: whoisoncall
+^^^^^^^^^^^^^^^^^^^^^
+
+This function gets the current on-call persons for the given schedule.
+
+**Input Contexts**
+
+:scheduleId: The name or ID or the schedule of interest, required
+
+:scheduleIdType: The type of the identifier, :code:`name` or :code:`id`.
+
+:flat: If true, will only return the usernames, otherwise, will return all including notification, team etc.
+
+**Export Contexts**
+
+:result: the data portion of the json payload.
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   workflows:
+     steps:
+       - call_function: opsgenie.whoisoncall
+         with:
+           scheduleId: sre_schedule
    
 
 slack
@@ -1350,6 +1446,8 @@ This function send a reply message to a slash command request. It is recommended
 
 :message: the message to be sent
 
+:blocks: construct the message using the slack :code:`layout blocks`, see slack document for detail
+
 See below for example
 
 .. code-block:: yaml
@@ -1389,6 +1487,8 @@ This function send a message to a slack channel slack incoming webhook. It is re
 
 :channel_id: The id of the channel the message is sent to. Use channel name here only when sending to a public channel or to the home channel of the webhook.
 
+
+:blocks: construct the message using the slack :code:`layout blocks`, see slack document for detail
 
 See below for example
 
@@ -1559,6 +1659,8 @@ This function send a reply message to a slash command request. It is recommended
 
 :message: the message to be sent
 
+:blocks: construct the message using the slack :code:`layout blocks`, see slack document for detail
+
 See below for example
 
 .. code-block:: yaml
@@ -1599,6 +1701,8 @@ This function send a message to a slack channel slack incoming webhook. It is re
 :channel_id: The id of the channel the message is sent to. Use channel name here only when sending to a public channel or to the home channel of the webhook.
 
 
+:blocks: construct the message using the slack :code:`layout blocks`, see slack document for detail
+
 See below for example
 
 .. code-block:: yaml
@@ -1621,6 +1725,29 @@ See below for example
            message_type: error
            message: Something happened
            channel_id: '#public_announce'
+   
+
+Function: users
+^^^^^^^^^^^^^^^
+
+This function queries all users for the team
+
+**Input Contexts**
+
+:cursor: Used for pagination, continue fetching from the cursor
+
+**Export Contexts**
+
+:slack_next_cursor: Used for pagination, used by next call to continue fetch
+
+:members: A list of data structures containing member information
+
+.. code-block:: yaml
+
+   ---
+   workflows:
+     get_all_slack_users:
+       call_function: slack_bot.users
    
 
 Workflows
@@ -1715,6 +1842,11 @@ For example
          message_type: $labels.status
          message: "work status is {{ .labels.status }}"
    
+
+opsgenie_users
+--------------
+
+This workflow wraps around the :code:`opsgenie.users` function and handles paging to get all users from Opsgenie.
 
 reload
 ------
@@ -1887,6 +2019,11 @@ sending heartbeat to alert system
 
 This workflow is just a wraper around the :code:`opsgenie.heartbeat` function.
 
+
+slack_users
+-----------
+
+This workflow wraps around the :code:`slack_bot.users` function and make multiple calls to stitch pages together.
 
 slashcommand
 ------------
