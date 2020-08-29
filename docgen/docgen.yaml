@@ -2,16 +2,19 @@
 repos:
   - repo: https://github.com/honeydipper/honeydipper-config-essentials
     name: essentials
+    branch: pre-release
     description: The essential configurations to bootstrap Honeydipper
 
   - repo: https://github.com/honeydipper/honeydipper-config-essentials
     path: /gcloud
     name: gcloud
+    branch: pre-release
     description: Contains drivers that interactive with gcloud assets
 
   - repo: https://github.com/honeydipper/honeydipper-config-essentials
     path: /datadog
     name: datadog
+    branch: pre-release
     description: This repo offers a way to emit Honeydipper internal metrics to datadog
 
 items:
