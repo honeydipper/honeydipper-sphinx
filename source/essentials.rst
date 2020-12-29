@@ -595,7 +595,7 @@ trigger pipelines in `circleci`.
 
 :circle_token: The token for making API calls to `circleci`.
 
-:<no value>: The base url of the API calls, defaults to :code:`https://circleci.com/api/v2`
+:url: The base url of the API calls, defaults to :code:`https://circleci.com/api/v2`
 
 Function: api
 ^^^^^^^^^^^^^
