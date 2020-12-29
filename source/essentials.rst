@@ -11,11 +11,94 @@ Include the following section in your **init.yaml** under **repos** section
 .. code-block:: yaml
 
    - repo: https://github.com/honeydipper/honeydipper-config-essentials
+     branch: main
 
 Drivers
 =======
 
 This repo provides following drivers
+
+api-broadcast
+-------------
+
+This driver shares the code with `redispubsub` driver. The purpose is provide a abstract
+feature for services to make broadcasts to each other. The current `redispubsub` driver
+offers a few functions through a `call_driver`. Once the `DipperCL` offers `call_feature`
+statement, we can consolidate the loading of the two drivers into one.
+
+
+**Configurations**
+
+:connection: The parameters used for connecting to the redis including `Addr`, `Password` and `DB`.
+
+See below for an example
+
+.. code-block:: yaml
+
+   ---
+   drivers:
+     redispubsub:
+       connection:
+         Addr: 192.168.2.10:6379
+         DB: 2
+         Password: ENC[gcloud-kms,...masked]
+   
+
+This driver doesn't offer any actions or functions.
+
+auth-simple
+-----------
+
+This driver provides RPCs for the API serive to authenticate the incoming requests. The
+supported method includes basic authentication, and token authentication. This also acts
+as a reference on how to implement authentication for honeydipper APIs.
+
+
+**Configurations**
+
+:schemes: a list of strings indicating authenticating methods to try, support `basic` and `token`.
+
+:users: a list of users for `basic` authentication.
+
+:users.name: the name of the user
+
+:users.pass: the password (use encryption)
+
+:users.subject: a structure describing the credential, used for authorization
+
+:tokens: a map of tokens to its subjects, each subject is a structure describing
+the credential, used for authorization.
+
+
+See below for an example
+
+.. code-block:: yaml
+
+   ---
+   drivers:
+     auth-simple:
+       schemes:
+         - basic
+         - token
+       users:
+         - name: user1
+           pass: ENC[...]
+           subject:
+             group: engineer
+             role: viewer
+         - name: admin
+           pass: ENC[...]
+           subject:
+             group: sre
+             role: admin
+       tokens:
+         ioefui3wfjejfasf:
+           subject:
+             group: machine
+             role: viewer
+   
+
+This driver doesn't offer any actions or functions.
 
 kubernetes
 ----------
@@ -230,6 +313,32 @@ See below for a simple example
              type: local
              job: $data.metadta.name
    
+
+redislock
+---------
+
+redislock driver provides RPC calls for the services to acquire locks for synchronize and
+coordinate between instances.
+
+
+**Configurations**
+
+:connection: The parameters used for connecting to the redis including `Addr`, `Password` and `DB`.
+
+See below for an example
+
+.. code-block:: yaml
+
+   ---
+   drivers:
+     redislock:
+       connection:
+         Addr: 192.168.2.10:6379
+         DB: 2
+         Password: ENC[gcloud-kms,...masked]
+   
+
+This drive doesn't offer any raw actions as of now.
 
 redispubsub
 -----------
@@ -475,6 +584,112 @@ Below is an example of defining and using a system trigger with webhook driver
 Systems
 =======
 
+circleci
+--------
+
+This system enables Honeydipper to integrate with `circleci`, so Honeydipper can
+trigger pipelines in `circleci`.
+
+
+**Configurations**
+
+:circle_token: The token for making API calls to `circleci`.
+
+:<no value>: The base url of the API calls, defaults to :code:`https://circleci.com/api/v2`
+
+Function: api
+^^^^^^^^^^^^^
+
+This is a generic function to make a circleci API call with the configured token. This function is meant to be used for defining other functions.
+
+
+Function: start_pipeline
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+This function will trigger a pipeline in the given circleci project and branch.
+
+
+**Input Contexts**
+
+:vcs: The VCS system integrated with this circle project, :code:`github` (default) or :code:`bitbucket`.
+
+:git_repo: The repo that the pipeline execution is for, e.g. :code:`myorg/myrepo`
+
+:git_branch: The branch that the pipeline execution is on.
+
+:pipeline_parameters: The parameters passed to the pipeline.
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   rules:
+     - when:
+         driver: webhook
+         if_match:
+           url: /from_circle
+         export:
+           git_repo: $event.form.git_repo.0
+           git_branch: $event.form.git_branch.0
+           ci_workflow: $event.form.ci_workflow.0
+       do:
+         call_workflow: process_and_return_to_circle
+   
+   workflows:
+     process_and_return_to_circle:
+       on_error: continue
+       steps:
+         - call_workflow: $ctx.ci_workflow
+           export_on_success:
+             pipeline_parameters:
+               deploy_success: "true"
+         - call_function: circleci.start_pipeline
+   
+
+Your :code:`circleci.yaml` might look like below
+
+.. code-block:: yaml
+
+   ---
+   jobs:
+     version: 2
+     deploy:
+       unless: << pipeline.parameters.via.honeydipper >>
+       steps:
+         - ...
+         - run: curl <honeydipper webhook> # trigger workflow on honeydipper
+     continue_on_success:
+       when: << pipeline.parameters.deploy_success >>
+       steps:
+         - ...
+         - run: celebration
+     continue_on_failure:
+       when:
+         and:
+           - << pipeline.parameters.via.honeydipper >>
+           - not: << pipeline.parameters.deploy_success >>
+       steps:
+         - ...
+         - run: recovering
+         - run: # return error here
+   
+   workflows:
+     version: 2
+     deploy:
+       jobs:
+         - deploy
+         - continue_on_success
+         - continue_on_failure
+     filters:
+       branches:
+         only: /^main$/
+   
+
+For detailed information on conditional jobs and workflows please see the
+`circleci support document <https://support.circleci.com/hc/en-us/articles/360043638052-Conditional-steps-in-jobs-and-conditional-workflows>`_.
+
+
 github
 ------
 
@@ -690,6 +905,39 @@ Or, you can match the conditions in workflow using exported context variables in
          call_workflow: do_something
    
 
+Function: addRepoToInstallation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This function will add a repo into an installed github app
+
+
+**Input Contexts**
+
+:installation_id: The installation_id of your github app
+
+:repoid: The Id of your github repository
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   rules:
+     - when:
+         driver: webhook
+         if_match:
+           url: /addrepoinstallation
+       do:
+         call_workflow: github_add_repo_installation
+   
+   workflows:
+     github_add_repo_installation:
+       call_function: github.addRepoToInstallation
+       with:
+         repoid: 12345678
+         intallationid: 12345678
+   
+
 Function: api
 ^^^^^^^^^^^^^
 
@@ -733,6 +981,80 @@ See below for example
            # the git_repo is available from event export
            # the git_issue is available from event export
            message: type `honeydipper help` to see a list of available commands
+   
+
+Function: createPR
+^^^^^^^^^^^^^^^^^^
+
+This function will create a pull request with given infomation
+
+
+**Input Contexts**
+
+:git_repo: The repo that the new PR is for, e.g. :code:`myorg/myrepo`
+
+:PR_content: The data structure to be passed to github for creating the PR, see `here <https://developer.github.com/v3/pulls/#input>`_ for detail
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   rules:
+     - when:
+         driver: webhook
+         if_match:
+           url: /createPR
+       do:
+         call_workflow: github_create_PR
+   
+   workflows:
+     github_create_PR:
+       call_function: github.createPR
+       with:
+         git_repo: myorg/myreop
+         PR_content:
+           title: update the data
+           head: mybranch
+           body: |
+             The data needs to be updated
+   
+             This PR is created using honeydipper
+   
+
+Function: createRepo
+^^^^^^^^^^^^^^^^^^^^
+
+This function will create a github repository for your org
+
+
+**Input Contexts**
+
+:org: the name of your org
+
+:name: The name of your repository
+
+:private: privacy of your repo, either true or false(it's default to false if not declared)
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   rules:
+     - when:
+         driver: webhook
+         if_match:
+           url: /createrepo
+       do:
+         call_workflow: github_create_repo
+   
+   workflows:
+     github_create_repo:
+       call_function: github.createRepo
+       with:
+         org: testing
+         name: testing-repo
    
 
 Function: createStatus
@@ -812,6 +1134,73 @@ See below for example
          circleci_conf: :yaml:{{ .ctx.file_content }}
    
 
+Function: getRepo
+^^^^^^^^^^^^^^^^^
+
+This function will query the detailed information about the repo.
+
+
+**Input Contexts**
+
+:git_repo: The repo that the query is for, e.g. :code:`myorg/myrepo`
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   rules:
+     - when:
+         driver: webhook
+         if_match:
+           url: /displayRepo
+       do:
+         call_workflow: query_repo
+   
+   workflows:
+     query_repo:
+       steps:
+         - call_function: github.getRepo
+           with:
+             git_repo: myorg/myreop
+         - call_workflow: notify
+           with:
+             message: The repo is created at {{ .ctx.repo.created_at }}
+   
+
+Function: removeRepoFromInstallation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This function will remove a repo from an installed github app
+
+
+**Input Contexts**
+
+:installation_id: The installation_id of your github app
+
+:repoid: The Id of your github repository
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   rules:
+     - when:
+         driver: webhook
+         if_match:
+           url: /removerepoinstallation
+       do:
+         call_workflow: github_remove_repo_installation
+   
+   workflows:
+     github_remove_repo_installation:
+       call_function: github.removeRepoFromInstallation
+       with:
+         repoid: 12345678
+         intallationid: 12345678
+   
+
 jira
 ----
 
@@ -829,6 +1218,8 @@ react to jira events and take actions on jira.
 :path: The path portion of the webhook url, by default :code:`/jira`
 
 :jira_domain: Specify the jira domain, e.g. :code:`mycompany` for :code:`mycompany.atlassian.net`
+
+:jira_domain_base: The DNS zone of the jira API urls, in case of accessing self hosted jira, defaults to :code:`atlassian.net`
 
 For example
 
@@ -885,18 +1276,22 @@ See below for example
 Function: createTicket
 ^^^^^^^^^^^^^^^^^^^^^^
 
-This function will create a jira ticket with given information
+This function will create a jira ticket with given information, refer to `jira rest API document<https://developer.atlassian.com/cloud/jira/platform/rest/v3/api-group-issues/#api-rest-api-3-issue-post>`_ for description of the fields and custom fields.
 
 
 **Input Contexts**
 
-:jira_project: The name of the jira project the ticket is created in
+:ticket.project.key: The name of the jira project the ticket is created in
 
-:ticket_title: A summary of the ticket
+:ticket.summary: A summary of the ticket
 
-:ticket_desc: Detailed description of the work for this ticket
+:ticket.description: Detailed description of the work for this ticket
 
-:ticket_type: The ticket type, by default :code:`Task`
+:ticket.issuetype.name: The ticket type
+
+:ticket.components: Optional, a list of components associated with the ticket
+
+:ticket.labels: Optional, a list of strings used as labels
 
 **Export Contexts**
 
@@ -911,10 +1306,20 @@ See below for example
      create_jira_ticket:
        call_function: jira.createTicket
        with:
-         jira_project: devlops
-         ticket_title: upgrading kubernetes
-         ticket_desc: |
-           Upgrade the test cluster to kubernetes 1.16
+         ticket:
+           project:
+             key: devops
+           issuetype:
+             name: Task
+           summary: upgrading kubernetes
+           description: |
+             Upgrade the test cluster to kubernetes 1.16
+           components:
+             - name: GKE
+             - name: security
+           labels:
+             - toil
+             - small
    
 
 kubernetes
@@ -990,6 +1395,34 @@ See below for example
                  restartPolicy: Never
              backoffLimit: 4
    
+
+Function: deleteJob
+^^^^^^^^^^^^^^^^^^^
+
+This function deletes a kubernetes job specified by the job name in :code:`.ctx.jobid`. It leverages the pre-configured system data to access the kubernetes cluster.
+
+
+**Input Contexts**
+
+:jobid: The name of the kubernetes job
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   workflows:
+     run_myjob:
+       - call_function: myk8scluster.createJob
+         ...
+         # this function exports .ctx.jobid
+       - call_function: myk8scluster.waitForJob
+         ...
+       - call_function: myk8scluster.deleteJob
+   
+
+This function is not usually used directly by users. It is added to the :ref:`run_kubernetes` workflow so that, upon successful completion, the job will be deleted. In rare cases, you can use the wrapper workflow :ref:`cleanup_k8s_job` to delete a job.
+
 
 Function: getJobLog
 ^^^^^^^^^^^^^^^^^^^
@@ -1170,6 +1603,33 @@ See below snippet for example
          call_workflow: notify
          with:
            message: 'The alert url is {{ .ctx.alert_url }}'
+   
+
+Function: contact
+^^^^^^^^^^^^^^^^^
+
+This function gets the user's contact methods
+
+
+**Input Contexts**
+
+:userId: The ID of the user for which to get contact methods
+
+**Export Contexts**
+
+:contacts: The detail of user's contact method in a map, or a list of user's contact methods
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   workflows:
+     steps:
+       - call_workflow: do_something
+       - call_function: opsgenie.contact
+         with:
+           userId: username@example.com
    
 
 Function: heartbeat
@@ -1514,6 +1974,11 @@ See below for example
            channel_id: '#public_announce'
    
 
+Function: send_message
+^^^^^^^^^^^^^^^^^^^^^^
+
+No description is available for this entry!
+
 slack_bot
 ---------
 
@@ -1727,6 +2192,11 @@ See below for example
            channel_id: '#public_announce'
    
 
+Function: send_message
+^^^^^^^^^^^^^^^^^^^^^^
+
+No description is available for this entry!
+
 Function: users
 ^^^^^^^^^^^^^^^
 
@@ -1800,6 +2270,55 @@ This is used by :code:`slashcommand` workflow and :code:`notify` workflow to aut
            #     - U78JS2F
            #     - '#public_channel1' # remain unchanged if missing from the map
    
+
+circleci_pipeline
+-----------------
+
+This workflows wrap around the :code:`circleci.start_pipeline` function so it can be used as a hook.
+
+For example, below workflow uses a hook to invoke the pipeline.
+
+.. code-block:: yaml
+
+   ---
+   rules:
+     - when:
+         driver: webhook
+         if_match:
+           url: /from_circle
+         export:
+           git_repo: $event.form.git_repo.0
+           git_branch: $event.form.git_branch.0
+           ci_workflow: $event.form.ci_workflow.0
+       do:
+         call_workflow: process_and_return_to_circle
+   
+   workflows:
+     process_and_return_to_circle:
+       with:
+         hooks:
+           on_exit+:
+             - circleci_pipeline
+       steps:
+         - call_workflow: $ctx.ci_workflow
+           export_on_success:
+             pipeline_parameters:
+               deploy_success: "true"
+   
+
+cleanup_kube_job
+----------------
+
+delete a kubernetes job
+
+**Input Contexts**
+
+:system: The k8s system to use to delete the job
+
+:no_cleanup_k8s_job: If set to truthy value, will skip deleting the job
+
+This workflow is intended to be invoked by :ref:`run_kuberentes` workflow as a hook upon successful completion.
+
 
 notify
 ------
@@ -1956,7 +2475,13 @@ Also supported is an optional :code:`securtyContext` field for defining the imag
 
 :timeout: Used for setting the :code:`activeDeadlineSeconds` for the k8s pod
 
-:cleanupAfter: Used for setting the :code:`TTLSecondsAfterFinished` for the k8s job, requires 1.13+ and the feature to be enabled for the cluster.
+:cleanupAfter: Used for setting the :code:`TTLSecondsAfterFinished` for the k8s job, requires 1.13+ and the alpha features to be enabled for the cluster. The feature is still in alpha as of k8s 1.18.
+
+
+:no_cleanup_k8s_job: By default, the job will be deleted upon successful completion. Setting this context variable to a truthy value will ensure that the successful job is kept in the cluster.
+
+
+:k8s_job_backoffLimit: By default, the job will not retry if the pod fails (:code:`backoffLimit` set to 0), you can use this to override the setting for the job.
 
 
 **Export Contexts**
@@ -2072,13 +2597,30 @@ You can try to convert the :code:`$ctx.parameters` to the variables the workflow
 slashcommand/announcement
 -------------------------
 
-This workflow sends a announcement message to the channels listed in :code:`slash_notify`.  Used internally.
+This workflow sends an announcement message to the channels listed in :code:`slash_notify`.  Used internally.
 
+
+slashcommand/execute
+--------------------
+
+No description is available for this entry!
 
 slashcommand/help
 -----------------
 
 This workflow sends a list of supported commands to the requestor.  Used internally.
+
+
+slashcommand/prepare_notification_list
+--------------------------------------
+
+This workflow constructs the notification list using :code:`slash_notify`. If the command is NOT issued from one of the listed channels.
+
+
+slashcommand/respond
+--------------------
+
+This workflow sends a response message to the channels listed in :code:`slash_notify`.  Used internally.
 
 
 slashcommand/status

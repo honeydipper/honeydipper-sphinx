@@ -11,6 +11,7 @@ Include the following section in your **init.yaml** under **repos** section
 .. code-block:: yaml
 
    - repo: https://github.com/honeydipper/honeydipper-config-essentials
+     branch: main
      path: /gcloud
 
 Drivers
@@ -482,6 +483,139 @@ See below for an example usage
        do:
          call_workflow: something
    
+
+gcloud-spanner
+--------------
+
+This driver enables Honeydipper to perform administrative tasks on spanner databases
+
+
+You can create systems to ease the use of this driver.
+
+for example
+
+.. code-block:: yaml
+
+   ---
+   systems:
+     my_spanner_db:
+       data:
+         serivce_account: ENC[...]
+         project: foo
+         instance: dbinstance
+         db: bar
+       functions:
+         start_backup:
+           driver: gcloud-spanner
+           rawAction: backup
+           parameters:
+             service_account: $sysData.service_account
+             project: $sysData.foo
+             instance: $sysData.dbinstance
+             db: $sysData.db
+             expires: $?ctx.expires
+           export_on_success:
+             backupOpID: $data.backupOpID
+         wait_for_backup:
+           driver: gcloud-spanner
+           rawAction: waitForBackup
+           parameters:
+             backupOpID: $ctx.backupOpID
+           export_on_success:
+             backup: $data.backup
+   
+
+Now we can just easily call the system function like below
+
+.. code-block:: yaml
+
+   ---
+   workflows:
+     create_spanner_backup:
+       steps:
+         - call_function: my_spanner_db.start_backup
+         - call_function: my_spanner_db.wait_for_backup
+   
+
+Action: backup
+^^^^^^^^^^^^^^
+
+creating a native backup of the specified database
+
+**Parameters**
+
+:service_account: A gcloud service account key (json) stored as byte array
+
+:project: The name of the project where the dataflow job to be created
+
+:instance: The spanner instance of the database
+
+:db: The name of the database
+
+:expires: Optional, defaults to 180 days, the duration after which the backup will expire and be removed. It should be in the format supported by :code:`time.ParseDuration`. See the `document <https://godoc.org/time#ParseDuration>`_ for detail.
+
+
+**Returns**
+
+:backupOpID: A Honeydipper generated identifier for the backup operation used for getting the operation status
+
+See below for a simple example
+
+.. code-block:: yaml
+
+   ---
+   workflows:
+     start_spanner_native_backup:
+       call_driver: gcloud-spanner.backup
+       with:
+         service_account: ...masked...
+         project: foo
+         instance: dbinstance
+         db: bar
+         expires: 2160h
+         # 24h * 90 = 2160h
+       export_on_success:
+         backupOpID: $data.backupOpID
+   
+
+Action: waitForBackup
+^^^^^^^^^^^^^^^^^^^^^
+
+wait for backup and return the backup status
+
+**Parameters**
+
+:backupOpID: The Honeydipper generated identifier by `backup` function call
+
+**Returns**
+
+:backup: The backup object returned by API. See `databasepb.Backup <https://godoc.org/google.golang.org/genproto/googleapis/spanner/admin/database/v1#Backup>`_ for detail
+
+
+See below for a simple example
+
+.. code-block:: yaml
+
+   ---
+   workflows:
+     wait_spanner_native_backup:
+       call_driver: gcloud-spanner.waitForbackup
+       with:
+         backupOpID: $ctx.backupOpID
+   
+
+Systems
+=======
+
+dataflow
+--------
+
+No description is available for this entry!
+
+kubernetes
+----------
+
+No description is available for this entry!
 
 Workflows
 =========
