@@ -29,7 +29,21 @@ statement, we can consolidate the loading of the two drivers into one.
 
 **Configurations**
 
-:connection: The parameters used for connecting to the redis including `Addr`, `Password` and `DB`.
+:connection: The parameters used for connecting to the redis including `Addr`, `Username`, `Password` and `DB`.
+
+:connection.TLS.Enabled: Accept true/false. Use TLS to connect to the redis server, support TLS1.2 and above.
+
+:connection.TLS.InsecureSkipVerify: Accept true/false. Skip verifying the server certificate. If enabled, TLS is susceptible to machine-in-the-middle attacks.
+
+:connection.TLS.VerifyServerName: When connecting using an IP instead of DNS name, you can override the name used for verifying
+against the server certificate. Or, use :code:`"*"` to accept any name or certificates without
+a valid common name as DNS name, no subject altertive names defined.
+
+
+:connection.TLS.CACerts: A list of CA certificates used for verifying the server certificate. These certificates are added on top
+of system defined CA certificates. See `Here <https://pkg.go.dev/crypto/x509#SystemCertPool>`_ for description
+on where the system defined CA certificates are.
+
 
 See below for an example
 
@@ -42,6 +56,14 @@ See below for an example
          Addr: 192.168.2.10:6379
          DB: 2
          Password: ENC[gcloud-kms,...masked]
+         TLS:
+           Enabled: true
+           VerifyServerName: "*"
+           CACerts:
+             - |
+               ----- BEGIN CERTIFICATE -----
+               ...
+               ----- END CERTIFICATE -----
    
 
 This driver doesn't offer any actions or functions.
@@ -323,7 +345,21 @@ coordinate between instances.
 
 **Configurations**
 
-:connection: The parameters used for connecting to the redis including `Addr`, `Password` and `DB`.
+:connection: The parameters used for connecting to the redis including `Addr`, `Username`, `Password` and `DB`.
+
+:connection.TLS.Enabled: Accept true/false. Use TLS to connect to the redis server, support TLS1.2 and above.
+
+:connection.TLS.InsecureSkipVerify: Accept true/false. Skip verifying the server certificate. If enabled, TLS is susceptible to machine-in-the-middle attacks.
+
+:connection.TLS.VerifyServerName: When connecting using an IP instead of DNS name, you can override the name used for verifying
+against the server certificate. Or, use :code:`"*"` to accept any name or certificates without
+a valid common name as DNS name, no subject altertive names defined.
+
+
+:connection.TLS.CACerts: A list of CA certificates used for verifying the server certificate. These certificates are added on top
+of system defined CA certificates. See `Here <https://pkg.go.dev/crypto/x509#SystemCertPool>`_ for description
+on where the system defined CA certificates are.
+
 
 See below for an example
 
@@ -336,6 +372,14 @@ See below for an example
          Addr: 192.168.2.10:6379
          DB: 2
          Password: ENC[gcloud-kms,...masked]
+         TLS:
+           Enabled: true
+           VerifyServerName: "*"
+           CACerts:
+             - |
+               ----- BEGIN CERTIFICATE -----
+               ...
+               ----- END CERTIFICATE -----
    
 
 This drive doesn't offer any raw actions as of now.
@@ -349,7 +393,21 @@ different components of Honeydipper system.
 
 **Configurations**
 
-:connection: The parameters used for connecting to the redis including `Addr`, `Password` and `DB`.
+:connection: The parameters used for connecting to the redis including `Addr`, `Username`, `Password` and `DB`.
+
+:connection.TLS.Enabled: Accept true/false. Use TLS to connect to the redis server, support TLS1.2 and above.
+
+:connection.TLS.InsecureSkipVerify: Accept true/false. Skip verifying the server certificate. If enabled, TLS is susceptible to machine-in-the-middle attacks.
+
+:connection.TLS.VerifyServerName: When connecting using an IP instead of DNS name, you can override the name used for verifying
+against the server certificate. Or, use :code:`"*"` to accept any name or certificates without
+a valid common name as DNS name, no subject altertive names defined.
+
+
+:connection.TLS.CACerts: A list of CA certificates used for verifying the server certificate. These certificates are added on top
+of system defined CA certificates. See `Here <https://pkg.go.dev/crypto/x509#SystemCertPool>`_ for description
+on where the system defined CA certificates are.
+
 
 See below for an example
 
@@ -362,6 +420,14 @@ See below for an example
          Addr: 192.168.2.10:6379
          DB: 2
          Password: ENC[gcloud-kms,...masked]
+         TLS:
+           Enabled: true
+           VerifyServerName: "*"
+           CACerts:
+             - |
+               ----- BEGIN CERTIFICATE -----
+               ...
+               ----- END CERTIFICATE -----
    
 
 Action: send
@@ -417,7 +483,21 @@ different components of Honeydipper system. It doesn't offer `rawActions` or
 
 **Configurations**
 
-:connection: The parameters used for connecting to the redis including `Addr`, `Password` and `DB`.
+:connection: The parameters used for connecting to the redis including `Addr`, `Username`, `Password` and `DB`.
+
+:connection.TLS.Enabled: Accept true/false. Use TLS to connect to the redis server, support TLS1.2 and above.
+
+:connection.TLS.InsecureSkipVerify: Accept true/false. Skip verifying the server certificate. If enabled, TLS is susceptible to machine-in-the-middle attacks.
+
+:connection.TLS.VerifyServerName: When connecting using an IP instead of DNS name, you can override the name used for verifying
+against the server certificate. Or, use :code:`"*"` to accept any name or certificates without
+a valid common name as DNS name, no subject altertive names defined.
+
+
+:connection.TLS.CACerts: A list of CA certificates used for verifying the server certificate. These certificates are added on top
+of system defined CA certificates. See `Here <https://pkg.go.dev/crypto/x509#SystemCertPool>`_ for description
+on where the system defined CA certificates are.
+
 
 See below for an example
 
@@ -430,6 +510,14 @@ See below for an example
          Addr: 192.168.2.10:6379
          DB: 2
          Password: ENC[gcloud-kms,...masked]
+         TLS:
+           Enabled: true
+           VerifyServerName: "*"
+           CACerts:
+             - |
+               ----- BEGIN CERTIFICATE -----
+               ...
+               ----- END CERTIFICATE -----
    
 
 web
