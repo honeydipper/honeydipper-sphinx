@@ -484,6 +484,44 @@ See below for an example usage
          call_workflow: something
    
 
+gcloud-secret
+-------------
+
+This driver enables Honeydipper to fetch items stored in Google Secret Manager.
+
+
+With access to Google Secret Manager, Honeydipper doesn't have to rely on cipher texts stored directly into the configurations in the repo. Instead, it can query the Google Secret Manager, and get access to the secrets based on the permissions granted to the identity it uses. :code:`DipperCL` uses a keyword interpolation to detect the items that need to be looked up using :code:`LOOKUP[<driver>,<key>]`. See blow for example.
+
+
+.. code-block:: yaml
+
+   mydata: LOOKUP[gcloud-secret,projects/foo/secrets/bar/versions/latest]
+   
+
+As of now, the driver doesn't take any configuration other than the generic `api_timeout`. It uses the default service account as its identity.
+
+
+RPC: lookup
+^^^^^^^^^^^^^^
+
+Lookup a secret in Google Secret Manager
+
+**Parameters**
+
+:*: The whole payload is used as a byte array of string for the key
+
+**Returns**
+
+:*: The whole payload is a byte array of plaintext
+
+See below for an example usage on invoking the RPC from another driver
+
+
+.. code:: go
+
+   retbytes, err := driver.RPCCallRaw("driver:gcloud-secret", "lookup", []byte("projects/foo/secrets/bar/versions/latest"))
+
+
 gcloud-spanner
 --------------
 
