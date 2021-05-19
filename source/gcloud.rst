@@ -648,7 +648,175 @@ Systems
 dataflow
 --------
 
-No description is available for this entry!
+This system provides a few functions to interact with Google dataflow jobs.
+
+
+**Configurations**
+
+:service_accounts.dataflow: The service account json key used to access the dataflow API, optional
+
+:locations.dataflow: The default location to be used for new dataflow jobs, if missing will use :code:`.sysData.locations.default`. And, can be overriden using `.ctx.location`
+
+
+:subnetworks.dataflow: The default subnetwork to be used for new dataflow jobs, if missing will use :code:`.sysData.subnetworks.default`. And, can be overriden using `.ctx.subnetwork`
+
+
+:project: default project used to access the dataflow API if :code:`.ctx.project` is not provided, optional
+
+
+The system can share data with a common configuration Google Cloud system that contains the configuration.
+
+For example
+
+.. code-block:: yaml
+
+   ---
+   systems:
+     dataflow:
+       extends:
+         - gcloud-config
+     gcloud-config:
+       project: my-gcp-project
+       locations:
+         default: us-central1
+       subnetworks:
+         default: default
+       service_accounts:
+         dataflow: ENC[gcloud-kms,xxxxxxx]
+   
+
+Function: createJob
+^^^^^^^^^^^^^^^^^^^
+
+Creates a dataflow job using a template.
+
+
+**Input Contexts**
+
+:project: Optional, in which project the job is created, defaults to the :code:`project` defined with the system
+
+:location: Optional, the location for the job, defaults to the system configuration
+
+:subnetwork: Optional, the subnetwork for the job, defaults to the system configuration
+
+:job: Required, the data structure describe the :code:`CreateJobFromTemplateRequest`, see the `API document <https://pkg.go.dev/google.golang.org/api/dataflow/v1b3#CreateJobFromTemplateRequest>`_ for details.
+
+**Export Contexts**
+
+:job: The job object, details `here <https://pkg.go.dev/google.golang.org/api/dataflow/v1b3#Job>`_
+
+For example
+
+.. code-block:: yaml
+
+   call_function: dataflow.createJob
+   with:
+     job:
+       gcsPath: gs://dataflow-templates/Cloud_Spanner_to_GCS_Avro
+       jobName: export-a-spanner-DB-to-gcs
+       parameters:
+         instanceId: my-spanner-instance
+         databaseId: my-spanner-db
+         outputDir: gs://my_spanner_export_bucket
+   
+
+Function: findJob
+^^^^^^^^^^^^^^^^^
+
+Find an active job with the given name pattern
+
+
+**Input Contexts**
+
+:project: Optional, in which project the job is created, defaults to the :code:`project` defined with the system
+
+:location: Optional, the location for the job, defaults to the system configuration
+
+:jobNamePattern: Required, a regex pattern used for match the job name
+
+**Export Contexts**
+
+:job: The first active matching job object, details `here <https://pkg.go.dev/google.golang.org/api/dataflow/v1b3#Job>`_
+
+For example
+
+.. code-block:: yaml
+
+   steps:
+     - call_function: dataflow.findJob
+       with:
+         jobNamePattern: ^export-a-spanner-DB-to-gcs$
+     - call_function: dataflow.getStatus
+   
+
+Function: getStatus
+^^^^^^^^^^^^^^^^^^^
+
+Wait for the dataflow job to complete and return the status of the job.
+
+
+**Input Contexts**
+
+:project: Optional, in which project the job is created, defaults to the :code:`project` defined with the system
+
+:location: Optional, the location for the job, defaults to the system configuration
+
+:job: Optional, the data structure describe the :code:`Job`, see the `API document <https://pkg.go.dev/google.golang.org/api/dataflow/v1b3#Job>`_ for details, if not specified, will use the dataflow job information from previous :code:`createJob` call.
+
+:timeout: Optional, if the job doesn't complete within the timeout, report error, defaults to :code:`1800` seconds
+
+:interval: Optional, polling interval, defaults to :code:`15` seconds
+
+**Export Contexts**
+
+:job: The job object, details `here <https://pkg.go.dev/google.golang.org/api/dataflow/v1b3#Job>`_
+
+For example
+
+.. code-block:: yaml
+
+   steps:
+     - call_function: dataflow.createJob
+       with:
+         job:
+           gcsPath: gs://dataflow-templates//Cloud_Spanner_to_GCS_Avro
+           jobName: export-a-spanner-DB-to-gcs
+           parameters:
+             instanceId: my-spanner-instance
+             databaseId: my-spanner-db
+             outputDir: gs://my_spanner_export_bucket
+     - call_function: dataflow.getStatus
+   
+
+Function: updateJob
+^^^^^^^^^^^^^^^^^^^
+
+Update a running dataflow job
+
+
+**Input Contexts**
+
+:project: Optional, in which project the job is created, defaults to the :code:`project` defined with the system
+
+:location: Optional, the location for the job, defaults to the system configuration
+
+:jobSpec: Required, a job object with a :code:`id` and the fields for updating.
+
+For example
+
+.. code-block:: yaml
+
+   steps:
+     - call_function: dataflow.findJob
+       with:
+         jobNamePattern: ^export-a-spanner-DB-to-gcs$
+     - call_function: dataflow.updateJob
+       with:
+         jobSpec:
+           id: $ctx.job.id
+           requestedState: JOB_STATE_DRAINING
+     - call_function: dataflow.getStatus
+   
 
 kubernetes
 ----------
@@ -657,6 +825,40 @@ No description is available for this entry!
 
 Workflows
 =========
+
+drainDataflowJob
+----------------
+
+Draining an active dataflow job, including finding the job with a regex name pattern, requesting draining and waiting for the job to complete.
+
+**Input Contexts**
+
+:system: The dataflow system used for draining the job
+
+:jobNamePattern: Required, a regex pattern used for match the job name
+
+**Export Contexts**
+
+:job: The job object, details `here <https://pkg.go.dev/google.golang.org/api/dataflow/v1b3#Job>`_
+
+:reason: If the job fails, the reason for the failure as reported by the API.
+
+For example
+
+.. code-block:: yaml
+
+   ---
+   rules:
+     - when:
+         source:
+           system: webhook
+           trigger: request
+       do:
+         call_workflow: drainDataflowJob
+         with:
+           system: dataflow-sandbox
+           jobNamePatttern: ^my-job-[0-9-]*$
+   
 
 use_gcloud_kubeconfig
 ---------------------
