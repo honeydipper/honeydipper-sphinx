@@ -813,7 +813,6 @@ For example
      - call_function: dataflow.updateJob
        with:
          jobSpec:
-           id: $ctx.job.id
            requestedState: JOB_STATE_DRAINING
      - call_function: dataflow.getStatus
    
