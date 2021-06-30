@@ -1852,6 +1852,9 @@ Function: whoisoncall
 
 This function gets the current on-call persons for the given schedule.
 
+.. important::
+   Use the `opsgenie_whoisoncall`_ workflow instead.
+
 **Input Contexts**
 
 :scheduleId: The name or ID or the schedule of interest, required
@@ -1874,6 +1877,163 @@ See below for example
        - call_function: opsgenie.whoisoncall
          with:
            scheduleId: sre_schedule
+   
+
+pagerduty
+---------
+
+This system enables Honeydipper to integrate with :code:`pagerduty`, so Honeydipper can
+react to pagerduty alerts and take actions through pagerduty API.
+
+
+**Configurations**
+
+:API_KEY: The API key used for making API calls to :code:`pagerduty`
+
+:signatureSecret: The secret used for validating webhook requests from :code:`pagerduty`
+
+:path: The path portion of the webhook url, by default :code:`/pagerduty`
+
+For example
+
+.. code-block:: yaml
+
+   ---
+   systems:
+     pagerduty:
+       data:
+         API_KEY: ENC[gcloud-kms,...masked...]
+         signatureSecret: ENC[gcloud-kms,...masked...]
+         path: "/webhook/pagerduty"
+   
+
+Assuming the domain name for the webhook server is :code:`myhoneydipper.com', you should configure the webhook in your pagerduty integration with url like below
+
+.. code-block::
+
+   https://myhoneydipper.com/webhook/pagerduty
+
+
+Trigger: alert
+^^^^^^^^^^^^^^
+
+This event is triggered when an pagerduty incident is raised.
+
+**Matching Parameters**
+
+:.json.event.data.title: This field can used to match alert with only certain messages
+
+:.json.event.data.service.summary: This field is to match only the alerts with certain service
+
+**Export Contexts**
+
+:alert_message: This context variable will be set to the detailed message of the alert.
+
+:alert_service: This context variable will be set to the service of the alert.
+
+:alert_Id: This context variable will be set to the short alert ID.
+
+:alert_system: This context variable will be set to the constant string, :code:`pagerduty`
+
+:alert_url: This context variable will be set to the url of the alert, used for creating links
+
+Pagerduty manages all the alerts through incidents. Although the trigger is named :code:`alert` for compatibility reason, it actually matches an incident.
+
+See below snippet for example
+
+.. code-block:: yaml
+
+   ---
+   rules:
+     - when:
+         source:
+           system: pagerduty
+           trigger: alert
+         if_match:
+           json:
+             data:
+               title: :regex:^test-alert.*$
+       do:
+         call_workflow: notify
+         with:
+           message: 'The alert url is {{ .ctx.alert_url }}'
+   
+
+Function: api
+^^^^^^^^^^^^^
+
+No description is available for this entry!
+
+Function: getEscalationPolicies
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+No description is available for this entry!
+
+Function: snooze
+^^^^^^^^^^^^^^^^
+
+snooze pagerduty incident
+
+
+**Input Contexts**
+
+:alert_Id: The ID of the incident to be snoozed
+
+:duration: For how long the incident should be snoozed, a number of seconds
+
+**Export Contexts**
+
+:incident: On success, returns the updated incident object
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   rules:
+     - when:
+         source:
+           system: pagerduty
+           trigger: alert
+         if_match:
+           json:
+             title: :regex:test-alert
+       do:
+         call_function: pagerduty.snooze
+         with:
+           # alert_Id is exported from the event
+           duration: 1200
+   
+
+Function: whoisoncall
+^^^^^^^^^^^^^^^^^^^^^
+
+This function gets the current on-call persons for the given schedule.
+
+.. important::
+   This function only fetches first 100 schedules when listing. Use `pagerduty_whoisoncall`_ workflow instead.
+
+**Input Contexts**
+
+:escalation_policy_ids: An array of IDs of the escalation policies; if missing, list all.
+
+**Export Contexts**
+
+:result: a list of data structure contains the schedule details. See `API <https://developer.pagerduty.com/api-reference/reference/REST/openapiv3.json/paths/~1oncalls/get>`_ for detail.
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   workflows:
+     until:
+       - $?ctx.EOL
+     steps:
+       - call_function: pagerduty.whoisoncall
+     no_export:
+       - offset
+       - EOL
    
 
 slack
@@ -2454,6 +2614,100 @@ opsgenie_users
 --------------
 
 This workflow wraps around the :code:`opsgenie.users` function and handles paging to get all users from Opsgenie.
+
+opsgenie_whoisoncall
+--------------------
+
+get opsgenie on call table
+
+This workflow wraps around multiple api calls to :code:`opsgenie` and produce a `on_call_table` datastructure.
+
+**Input Contexts**
+
+:schedule_pattern: Optional, the keyword used for filtering the on call schedules.
+
+**Export Contexts**
+
+:on_call_table: A map from on call schedule names to lists of users.
+
+This is usually used for showing the on-call table in response to slash commands.
+
+For example
+
+.. code-block:: yaml
+
+   ---
+   workflows:
+     show_on_calls:
+       with:
+         alert_system: opsgenie
+       no_export:
+         - '*'
+       steps:
+         - call: '{{ .ctx.alert_system }}_whoisoncall'
+         - call: notify
+           with:
+             notify*:
+               - reply
+             response_type: in_channel
+             blocks:
+               - type: section
+                 text:
+                   type: mrkdn
+                   text: |
+                     *===== On call users ======*
+                     {{- range $name, $users := .ctx.on_call_table }}
+                     *{{ $name }}*: {{ join ", " $users }}
+                     {{- end }}
+   
+
+pagerduty_whoisoncall
+---------------------
+
+get pagerduty on call table
+
+This workflow wraps around multiple api calls to :code:`pagerduty` and produce a `on_call_table` datastructure.
+
+**Input Contexts**
+
+:tag_name: Optional, the keyword used for filtering the on tags
+
+:schedule_pattern: Optional, the keyword used for filtering the on-call escalation policies.
+
+**Export Contexts**
+
+:on_call_table: A map from on call schedule names to lists of users.
+
+This is usually used for showing the on-call table in response to slash commands.
+
+For example
+
+.. code-block:: yaml
+
+   ---
+   workflows:
+     show_on_calls:
+       with:
+         alert_system: pagerduty
+       no_export:
+         - '*'
+       steps:
+         - call: '{{ .ctx.alert_system }}_whoisoncall'
+         - call: notify
+           with:
+             notify*:
+               - reply
+             response_type: in_channel
+             blocks:
+               - type: section
+                 text:
+                   type: mrkdn
+                   text: |
+                     *===== On call users ======*
+                     {{- range $name, $users := .ctx.on_call_table }}
+                     *{{ $name }}*: {{ join ", " $users }}
+                     {{- end }}
+   
 
 reload
 ------
