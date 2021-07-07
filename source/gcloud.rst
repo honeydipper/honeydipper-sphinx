@@ -825,6 +825,46 @@ No description is available for this entry!
 Workflows
 =========
 
+cancelDataflowJob
+-----------------
+
+Cancel an active dataflow job, and wait for the job to quit.
+
+**Input Contexts**
+
+:system: The dataflow system used for draining the job
+
+:job: Required, a job object returned from previous :code:`findJob` or :code:`getStatus` functions, details `here <https://pkg.go.dev/google.golang.org/api/dataflow/v1b3#Job>`_
+
+:cancelling_timeout: Optional, time in seconds for waiting for the job to quit, default 1800
+
+**Export Contexts**
+
+:job: The updated job object, details `here <https://pkg.go.dev/google.golang.org/api/dataflow/v1b3#Job>`_
+
+:reason: If the job fails, the reason for the failure as reported by the API.
+
+For example
+
+.. code-block:: yaml
+
+   ---
+   rules:
+     - when:
+         source:
+           system: webhook
+           trigger: request
+       do:
+         steps:
+           - call_function: dataflow-sandbox.findJob
+             with:
+               jobNamePatttern: ^my-job-[0-9-]*$
+           - call_workflow: cancelDataflowJob
+             with:
+               system: dataflow-sandbox
+               # job object is automatically exported from previous step
+   
+
 drainDataflowJob
 ----------------
 
@@ -835,6 +875,12 @@ Draining an active dataflow job, including finding the job with a regex name pat
 :system: The dataflow system used for draining the job
 
 :jobNamePattern: Required, a regex pattern used for match the job name
+
+:draining_timeout: Optional, draining timeout in seconds, default 1800
+
+:no_cancelling: Optional, unless specified, the job will be cancelled after draining timeout
+
+:cancelling_timeout: Optional, time in seconds for waiting for the job to quit, default 1800
 
 **Export Contexts**
 
