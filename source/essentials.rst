@@ -685,6 +685,26 @@ trigger pipelines in `circleci`.
 
 :url: The base url of the API calls, defaults to :code:`https://circleci.com/api/v2`
 
+:org: The default org name
+
+Function: add_env_var
+^^^^^^^^^^^^^^^^^^^^^
+
+Add env var to a project.
+
+
+**Input Contexts**
+
+:vcs: The VCS system integrated with this circle project, :code:`github` (default) or :code:`bitbucket`.
+
+:git_repo: The repo that the env var is for, e.g. :code:`myorg/myrepo`, takes precedent over :code:`repo`.
+
+:repo: The repo name that the env var is for, without the org, e.g. :code:`myrepo`
+
+:name: Env var name
+
+:value: Env var value
+
 Function: api
 ^^^^^^^^^^^^^
 
@@ -701,7 +721,9 @@ This function will trigger a pipeline in the given circleci project and branch.
 
 :vcs: The VCS system integrated with this circle project, :code:`github` (default) or :code:`bitbucket`.
 
-:git_repo: The repo that the pipeline execution is for, e.g. :code:`myorg/myrepo`
+:git_repo: The repo that the pipeline execution is for, e.g. :code:`myorg/myrepo`, takes precedent over :code:`repo`.
+
+:repo: The repo name that the pipeline execution is for, without the org, e.g. :code:`myrepo`
 
 :git_branch: The branch that the pipeline execution is on.
 
@@ -777,6 +799,82 @@ Your :code:`circleci.yaml` might look like below
 For detailed information on conditional jobs and workflows please see the
 `circleci support document <https://support.circleci.com/hc/en-us/articles/360043638052-Conditional-steps-in-jobs-and-conditional-workflows>`_.
 
+
+codeclimate
+-----------
+
+This system enables Honeydipper to integrate with `CodeClimate`.
+
+
+**Configurations**
+
+:api_key: The token for authenticating with CodeClimate
+
+:url: The CodeClimate API URL
+
+:org: For private repos, this is the default org name
+
+:org_id: For private repos, this is the default org ID
+
+For example
+
+.. code-block:: yaml
+
+   ---
+   systems:
+     codeclimate:
+       data:
+         api_key: ENC[gcloud-kms,...masked...]
+         url: "https://api.codeclimate.com/v1"
+   
+
+To configure the integration in CodeClimate,
+
+1. navigate to :code:`User Settings` => :code:`API Access`
+2. generate a new token, and record it as :code:`api_key` in system data
+
+
+Function: add_private_repo
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Add a private GitHub repository to Code Climate.
+
+
+**Input Contexts**
+
+:org_id: Code Climate organization ID, if missing use pre-configured :code:`sysData.org_id`
+
+:org: Github organization name, if missing use pre-configured :code:`sysData.org`
+
+:repo: Github repository name
+
+Function: add_public_repo
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Add a GitHub open source repository to Code Climate.
+
+
+**Input Contexts**
+
+:repo: The repo to add, e.g. :code:`myuser/myrepo`
+
+Function: api
+^^^^^^^^^^^^^
+
+This is a generic function to make a circleci API call with the configured token. This function is meant to be used for defining other functions.
+
+
+Function: get_repo_info
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Get repository information
+
+
+**Input Contexts**
+
+:org: Github organization name, if missing use pre-configured :code:`sysData.org`
+
+:repo: Github repository name
 
 github
 ------
@@ -2567,6 +2665,16 @@ delete a kubernetes job
 
 This workflow is intended to be invoked by :ref:`run_kuberentes` workflow as a hook upon successful completion.
 
+
+codeclimate/add_private_repo
+----------------------------
+
+Add a private Github repository to Code Climate
+
+codeclimate/add_public_repo
+---------------------------
+
+Add a public Github repository to Code Climate
 
 notify
 ------

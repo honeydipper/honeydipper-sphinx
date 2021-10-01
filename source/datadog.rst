@@ -99,3 +99,60 @@ For example, calling from a driver
    })
 
 
+Systems
+=======
+
+datadog
+-------
+
+This system enables Honeydipper to integrate with `datadog`, so Honeydipper can
+emit metrics using workflows or functions.
+
+The system doesn't take authentication configuration, but uses configuration from the
+:code:`datadog-emitter` driver. See the driver for details.
+
+
+**Configurations**
+
+:heartbeat_metric: Uses this metric to track all heartbeats with different tags.
+
+Function: heartbeat
+^^^^^^^^^^^^^^^^^^^
+
+This function will send a heartbeat request to datadog.
+
+
+**Input Contexts**
+
+:heartbeat: The prefix of the heartbeat metric name used for tagging.
+
+:heartbeat_expires: Tag the metric with expiring duration, used for creating monitors.
+
+:heartbeat_owner: The owner of the heartbeat, used as the suffix of the metric name.
+
+Function: increment
+^^^^^^^^^^^^^^^^^^^
+
+This function will increment a counter metric.
+
+
+**Input Contexts**
+
+:metric: The name of the metric.
+
+:tags: Optional, a list of strings as tags for the metric.
+
+Function: set
+^^^^^^^^^^^^^
+
+This function will set a gauge metric.
+
+
+**Input Contexts**
+
+:metric: The name of the metric.
+
+:tags: Optional, a list of strings as tags for the metric.
+
+:value: The value of the metric.
+
