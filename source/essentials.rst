@@ -1553,6 +1553,9 @@ This function creates a k8s run-to-completion job with given job spec data struc
 
 :job: The job data structure following the specification for a run-to-completion job manifest yaml file.
 
+:fromCronJob: Creating the job based on the definition of a cronjob, in the form of :code:`namespace/cronjob`. If the namespace is omitted, the current namespace where the job is being created will be used for looking up the cronjob.
+
+
 **Export Contexts**
 
 :jobid: The job ID of the created job
@@ -2325,6 +2328,16 @@ Function: send_message
 
 No description is available for this entry!
 
+Function: update_message
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+No description is available for this entry!
+
+Function: update_response
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+No description is available for this entry!
+
 slack_bot
 ---------
 
@@ -2543,6 +2556,16 @@ Function: send_message
 
 No description is available for this entry!
 
+Function: update_message
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+No description is available for this entry!
+
+Function: update_response
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+No description is available for this entry!
+
 Function: users
 ^^^^^^^^^^^^^^^
 
@@ -2696,6 +2719,9 @@ send chat message through chat system
 
 
 :chat_colors: A map from message_type to color codes. This should usually be defined in default context so it can be shared.
+
+
+:update: Set to true to update a previous message identified with :code:`ts`.
 
 
 This workflow wraps around :code:`say` and :code:`reply` method, and allows multiple recipients.
@@ -2921,6 +2947,9 @@ details.
 Also supported is an optional :code:`securtyContext` field for defining the image security context.
 
 
+:resources: Used for specifying how much of each resource a container needs. See k8s resource management for containers for detail.
+
+
 :predefined_steps: A map of predefined steps. Use the name of the predefined step in :code:`steps` list to easily define a step without specifying the fields. This makes it easier to repeat or share the steps that can be used in multiple places. We can also override part of the predefined steps when defining the steps with `use` and overriding fields.
 
 
@@ -2945,6 +2974,18 @@ Also supported is an optional :code:`securtyContext` field for defining the imag
 
 
 :k8s_job_backoffLimit: By default, the job will not retry if the pod fails (:code:`backoffLimit` set to 0), you can use this to override the setting for the job.
+
+
+:parallelism: Parallel job execution by setting this to a non-negative integer. If left unset, it will default to 1.
+
+
+:fromCronJob: Creating the job based on the definition of a cronjob, in the form of :code:`namespace/cronjob`. If the namespace is omitted, the current namespace where the job is being created will be used for looking up the cronjob.
+
+
+:job_creator: The value for the :code:`creator` label, defaults to :code:`honeydipper`. It is useful when you want to target the jobs created through this workflow using :code:`kubectl` commands with :code:`-l` option.
+
+
+:on_job_start: If specified, a workflow specified by :code:`on_job_start` will be executed once the job is created. This is useful for sending notifications with job name, links to the log etc.
 
 
 **Export Contexts**
