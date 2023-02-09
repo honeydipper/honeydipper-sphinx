@@ -912,6 +912,65 @@ Assuming the domain name for the webhook server is :code:`myhoneydipper.com', yo
    https://myhoneydipper.com/webhook/github?token=...masked...
 
 
+Trigger: commit_status
+^^^^^^^^^^^^^^^^^^^^^^
+
+This is triggered when a **github** commit status is updated.
+
+**Matching Parameters**
+
+:.json.repository.full_name: Specify this in the :code:`when` section of the rule using :code:`if_match`, to filter the events for the repo
+
+:.json.branches.name: This field is to match only the status events happened on certain branches
+
+:.json.context: This field is to match only the status events with certain check name, e.g. :code:`ci/circleci: yamllint`
+
+:.json.state: This field is to match only the status events with certain state, :code:`pending`, :code:`success`(default), :code:`failure` or :code:`error`
+
+**Export Contexts**
+
+:git_repo: This context variable will be set to the name of the repo, e.g. :code:`myorg/myrepo`
+
+:branches: A list of branches that contain the commit
+
+:git_commit: This context variable will be set to the short (7 characters) commit hash of the head commit of the push
+
+:git_status_state: This context variable will be set to the state of the status, e.g. :code:`pending`, :code:`success`, :code:`failure` or :code:`error`
+
+:git_status_context: This context variable will be set to the name of the status, e.g. :code:`ci/circleci: yamllint`
+
+:git_status_description: This context variable will be set to the description of the status, e.g. :code:`Your tests passed on CircleCI!`
+
+See below snippet for example
+
+.. code-block:: yaml
+
+   ---
+   rules:
+     - when:
+         source:
+           system: github
+           trigger: commit_status
+         if_match:
+           json:
+             repository:
+               full_name: myorg/myrepo # .json.repository.full_name
+             branches:
+               name: main              # .json.branches.name
+             context: mycheck          # .json.context
+             state: success            # .json.state
+       do:
+         call_workflow: do_something
+         # following context variables are available
+         #   git_repo
+         #   branches
+         #   git_commit
+         #   git_status_state
+         #   git_status_context
+         #   git_status_description
+         #
+   
+
 Trigger: hit
 ^^^^^^^^^^^^
 
@@ -2241,6 +2300,11 @@ See below snippet for example
            - call_workflow: do_something
    
 
+Function: add_response
+^^^^^^^^^^^^^^^^^^^^^^
+
+No description is available for this entry!
+
 Function: reply
 ^^^^^^^^^^^^^^^
 
@@ -2330,11 +2394,6 @@ No description is available for this entry!
 
 Function: update_message
 ^^^^^^^^^^^^^^^^^^^^^^^^
-
-No description is available for this entry!
-
-Function: update_response
-^^^^^^^^^^^^^^^^^^^^^^^^^
 
 No description is available for this entry!
 
@@ -2469,6 +2528,11 @@ See below snippet for example
            - call_workflow: do_something
    
 
+Function: add_response
+^^^^^^^^^^^^^^^^^^^^^^
+
+No description is available for this entry!
+
 Function: reply
 ^^^^^^^^^^^^^^^
 
@@ -2558,11 +2622,6 @@ No description is available for this entry!
 
 Function: update_message
 ^^^^^^^^^^^^^^^^^^^^^^^^
-
-No description is available for this entry!
-
-Function: update_response
-^^^^^^^^^^^^^^^^^^^^^^^^^
 
 No description is available for this entry!
 
@@ -2698,6 +2757,12 @@ codeclimate/add_public_repo
 ---------------------------
 
 Add a public Github repository to Code Climate
+
+inject_misc_steps
+-----------------
+
+This workflow injects some helpful steps into the k8s job before making the API to create the job, based on the processed job definitions. It is not recommended to use this workflow directly. Instead, use :code:`run_kubernetes` to leverage all the predefined context variables.
+
 
 notify
 ------

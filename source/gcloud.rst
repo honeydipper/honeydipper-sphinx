@@ -938,7 +938,7 @@ The workflow will add a step to run :code:`gcloud container clusters get-credent
 use_google_credentials
 ----------------------
 
-This workflow will add a step into :code:`steps` context variable so the following :code:`run_kubernetes` workflow can use default google credentials or specify a credential through a k8s secret.
+This workflow will add a step into :code:`steps` context variable so the following :code:`run_kubernetes` workflow can use default google credentials, specify a credential through a k8s secret, or use `berglas <https://github.com/GoogleCloudPlatform/berglas>`_ to fetch the credentials at runtime(recommended).
 
 
 .. important::
@@ -947,7 +947,9 @@ This workflow will add a step into :code:`steps` context variable so the followi
 
 **Input Contexts**
 
-:google_credentials_secret: The name of the k8s secret storing the service account key, if missing, use default service account
+:google_credentials_secret: The name of the k8s secret storing the service account key
+
+:google_credentials_berglas_secret: The name of the secret to be fetched using berglas, if no secrets is specified, use default service account
 
 For example
 
@@ -962,8 +964,35 @@ For example
              google_credentials_secret: my_k8s_secret
          - call_workflow: run_kubernetes
            with:
+             # notice we use append modifier here ("+") so
+             # steps pre-configured through :code:`use_google_credentials`
+             # wont be overwritten.
              steps+:
                - type: gcloud
                  shell: gcloud compute disks list
+   
+
+An example with berglas secret
+
+.. code-block:: yaml
+
+   ---
+   workflows:
+     run_my_job:
+       with:
+         google_credentials_berglas_secret: sm://my-gcp-project/my-service-account-secret
+       steps:
+         - call_workflow: use_google_credentials
+         - call_workflow: run_kubernetes
+           with:
+             steps+:
+               - type: gcloud
+                 shell: gcloud compute disks list
+         - call_workflow: use_google_credentials
+         - call_workflow: run_kubernetes
+           with:
+             steps+:
+               - type: gcloud
+                 shell: gsutil ls gs://mybucket
    
 
