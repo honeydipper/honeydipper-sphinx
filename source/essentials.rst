@@ -1413,6 +1413,44 @@ See below for example
              message: The repo is created at {{ .ctx.repo.created_at }}
    
 
+Function: mergeBranch
+^^^^^^^^^^^^^^^^^^^^^
+
+This function will merge the head branch into base branch with a merge commit.
+
+
+**Input Contexts**
+
+:git_repo: The repo where the merge operation takes place, e.g. :code:`myorg/myrepo`
+
+:base_branch: The base branch to merge into, no :code:`refs/heads/` prefix, e.g. :code:`main` or :code:`staging` etc.
+
+:head_branch: The head branch where the changes are, e.g. :code:`my-patch`, :code:`fix-issue-123` etc.
+
+:commit_message: The message for the merge commit. for example :code:`merged by Honeydipepr`
+
+**Export Contexts**
+
+:merge_commit_sha: The sha for the merge commit.
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   workflows:
+     merge_work_branch:
+       call_function: github.mergeBranch
+       with:
+         git_repo: myorg/mybranch
+         base_branch: main
+         head_branch: mywork
+         commit_messga: |
+           chore(release): release
+   
+           Work is done. Released!
+   
+
 Function: removeRepoFromInstallation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1444,6 +1482,44 @@ See below for example
        with:
          repoid: 12345678
          intallationid: 12345678
+   
+
+Function: updateRef
+^^^^^^^^^^^^^^^^^^^
+
+This function will update the ref to point to a new commit, in other words, push the new commit into the branch. No force push is allowed, so there is no overwriting.
+
+
+**Input Contexts**
+
+:git_repo: The repo where the update takes place, e.g. :code:`myorg/myrepo`
+
+:git_ref: The ref/branch to be updated, must with prefix :code:`refs/heads/`, e.g. :code:`refs/heads/main` or :code:`refs/heads/staging` etc.
+
+:git_commit_full: The git commit full sha for the new commit.
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   workflows:
+     releaseStagingToMain:
+       with:
+         git_repo: myorg/mybranch
+       steps:
+         - call_function: github.mergeBranch
+           with:
+             base_branch: main
+             head_branch: staging
+             commit_messga: |
+               chore(release): release
+   
+               Test is done. Released!
+         - call_function: github.updateRef
+           with:
+             git_ref: refs/heads/staging
+             git_commit_full: $ctx.merge_commit_sha
    
 
 jira
