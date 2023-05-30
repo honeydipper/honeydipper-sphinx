@@ -579,7 +579,7 @@ Below is an example of specifying header for the outbound request defined throug
              URL: $sysData.url
              header:
                Authorization: Bearer {{ .sysData.token }}
-               content-type: application.json
+               content-type: application/json; charset=utf-8
            rawAction: request
    
 
@@ -638,7 +638,7 @@ See below for a simple example
          form:
            s: hello
          headers:
-           content-type: application/x-www-form-urlencoded
+           content-type: application/x-www-form-urlencoded; charset=utf-8
          method: POST
          url: /foo/bar
    
