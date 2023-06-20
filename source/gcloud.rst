@@ -431,6 +431,59 @@ See below for an example usage on invoking the RPC from another driver
    retbytes, err := driver.RPCCallRaw("driver:gcloud-kms", "decrypt", cipherbytes)
 
 
+gcloud-logging
+--------------
+
+This driver enables Honeydipper to natively send logs to GCP
+
+
+**Configurations**
+
+:loggers: Mapping loggers to their configurations, if needed; support only one field in the configuration as of now, :code:`service_account`. Loggers without configurations will attempt to use default account.
+
+For example
+
+.. code-block:: yaml
+
+   ---
+   drivers:
+     gcloud-logging:
+       loggers:
+         my_log:
+           service_account: LOOKUP[gcloud-secret,...secret...]
+         "my_project|my_log":
+           service_account: LOOKUP[gcloud-secret,...secret...]
+   
+
+Action: log
+^^^^^^^^^^^
+
+send logs to GCP
+
+**Parameters**
+
+:severity: The serverity of the log entry, default to :code:`info`
+
+:logger: The logger path, in the form of :code:`project|logger_nbame`, or :code:`logger_name` if using GCE metadata for project ID.
+
+:payload: The payload of the log entry, string, struct or a map
+
+See below for a simple example
+
+.. code-block:: yaml
+
+   ...
+     call_driver: gcloud-logging.log
+     with:
+       severity: info
+       logger: my_log
+       payload:
+         country: US
+         state: CA
+         city: Los Angeles
+         sales: 12000
+   
+
 gcloud-pubsub
 -------------
 

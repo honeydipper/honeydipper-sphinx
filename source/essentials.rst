@@ -1720,6 +1720,46 @@ See below for example
              backoffLimit: 4
    
 
+Function: createPVC
+^^^^^^^^^^^^^^^^^^^
+
+This function creates a Persistent Volume Claim.
+
+
+**Input Contexts**
+
+:pvc: The PersistentVolumeClaim specification.
+
+**Export Contexts**
+
+:pvc_name: The name of the pvc
+
+:pvc_status: The status of the pvc
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   workflow:
+     generate_pvc:
+       steps:
+         - call_function: my-k8s-cluster.createPVC
+           with:
+             pvc:
+               apiVersion: v1
+               kind: PersistentVolumeClaim
+               metadata:
+                 name: pvc-demo
+               spec:
+                 accessModes:
+                   - ReadWriteOnce
+                 resources:
+                   requests:
+                     storage: 30Gi
+                 storageClassName: standard-rwo
+   
+
 Function: deleteJob
 ^^^^^^^^^^^^^^^^^^^
 
@@ -1747,6 +1787,29 @@ See below for example
 
 This function is not usually used directly by users. It is added to the :ref:`run_kubernetes` workflow so that, upon successful completion, the job will be deleted. In rare cases, you can use the wrapper workflow :ref:`cleanup_k8s_job` to delete a job.
 
+
+Function: deletePVC
+^^^^^^^^^^^^^^^^^^^
+
+This function deletes a Persistent Volume Claim.
+
+
+**Input Contexts**
+
+:pvc_name: The name of the PersistentVolumeClaim.
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   workflow:
+     cleanup_pvc:
+       steps:
+         - call_function: my-k8s-cluster.deletePVC
+           with:
+             pvc_name: pvc-demo
+   
 
 Function: getJobLog
 ^^^^^^^^^^^^^^^^^^^
