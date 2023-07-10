@@ -68,6 +68,11 @@ See below for an example
 
 This driver doesn't offer any actions or functions.
 
+auth-gcp-iap
+------------
+
+No description is available for this entry!
+
 auth-simple
 -----------
 
@@ -891,6 +896,8 @@ react to github events and take actions on `github`.
 
 
 :path: The path portion of the webhook url, by default :code:`/github/push`
+
+:tokenSource: This is used for authentication with oauth2 jwt. The name maps to an entry defined in :code:`token_sources` of the **web** driver.
 
 For example
 
