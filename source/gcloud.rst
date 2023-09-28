@@ -695,6 +695,159 @@ See below for a simple example
          backupOpID: $ctx.backupOpID
    
 
+gcloud-storage
+--------------
+
+This driver enables Honeydipper to read and write files to GCS.
+
+
+Action: fetchFile
+^^^^^^^^^^^^^^^^^
+
+download a file from GCS.
+
+**Parameters**
+
+:service_account: Optioanl, the json key for the service account, use ENC or LOOKUP to protect is.
+
+:bucket: The name of the bucket.
+
+:fileObject: The full path name of the file.
+
+:fileType: Optional, if set, use this to verify the content-type header
+
+**Returns**
+
+:file_content: The content of the file.
+
+
+See below for a simple example
+
+.. code-block:: yaml
+
+   ...
+     call_driver: gcloud-storage.fetchFile
+     with:
+       bucket: foo
+       fileObject: bar
+   
+
+Action: listBuckets
+^^^^^^^^^^^^^^^^^^^
+
+list all the buckets.
+
+**Parameters**
+
+:service_account: Optioanl, the json key for the service account, use ENC or LOOKUP to protect is.
+
+**Returns**
+
+:buckets: a list of strings representing the bucket names.
+
+
+See below for a simple example
+
+.. code-block:: yaml
+
+   ...
+     call_driver: gcloud-storage.listBuckets
+   
+
+Action: listFiles
+^^^^^^^^^^^^^^^^^
+
+list files with certain prefix.
+
+**Parameters**
+
+:service_account: Optional, the json key for the service account, use ENC or LOOKUP to protect is.
+
+:prefix: Optional, prefix, or path of the files to be listed.
+
+:delimiter: Optional, path delimiter.
+
+**Returns**
+
+:files: a list of strings representing the file names.
+
+
+:prefixes: a list of strings representing the subdirectory names.
+
+
+See below for a simple example
+
+.. code-block:: yaml
+
+   ...
+     call_driver: gcloud-storage.listFiles
+     with:
+       bucket: bar
+       prefix: foo
+   
+
+Action: getAttrs
+^^^^^^^^^^^^^^^^
+
+get file attributes.
+
+**Parameters**
+
+:service_account: Optional, the json key for the service account, use ENC or LOOKUP to protect is.
+
+:bucket: The name of the bucket.
+
+:fileObject: The full path name of the file.
+
+**Returns**
+
+:attrs: The attributes of the file, see `API referece <https://pkg.go.dev/cloud.google.com/go/storage#ObjectAttrs>`_ for detail.
+
+
+:exists: a boolean value indicates if the file exists or not.
+
+
+See below for a simple example
+
+.. code-block:: yaml
+
+   ...
+     call_driver: gcloud-storage.getAttrs
+     with:
+       bucket: foo
+       fileObject: bar/mydata
+   
+
+Action: writeFile
+^^^^^^^^^^^^^^^^^
+
+write content to a file.
+
+**Parameters**
+
+:service_account: Optional, the json key for the service account, use ENC or LOOKUP to protect is.
+
+:bucket: The name of the bucket.
+
+:fileObject: The full path name of the file.
+
+:fileType: Optional, the content-type attribute of the file.
+
+:content: The full path name of the file.
+
+The content could be a bytes array, a string or anything else. For non-string values, it will be json (default) or yaml encoded based on the fileType.
+
+.. code-block:: yaml
+
+   ...
+     call_driver: gcloud-storage.writeFile
+     with:
+       bucket: foo
+       fileObject: bar/mydata.json
+       content:
+         foo: bar
+   
+
 Systems
 =======
 
