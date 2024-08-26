@@ -1157,6 +1157,47 @@ Or, you can match the conditions in workflow using exported context variables in
          call_workflow: do_something
    
 
+Trigger: release_published
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is triggered when a new release is published.
+
+**Matching Parameters**
+
+:.json.repository.full_name: This field is to match only the pull requests from certain repo
+
+:.json.release.tag_name: This field can be used for pattern matching the tag names. Note that, It does not include the prefix :code:`ref/heads/` (different from push event).
+
+
+**Export Contexts**
+
+:git_repo: This context variable will be set to the name of the repo, e.g. :code:`myorg/myrepo`
+
+:git_tag: This context variable will be set to the name of the tag, e.g. :code:`v1.3.3`
+
+See below snippet for example
+
+.. code-block:: yaml
+
+   ---
+   rules:
+     - when:
+         source:
+           system: github
+           trigger: release_published
+         if_match:
+           json:
+             repository:
+               full_name: myorg/myrepo # .json.repository.full_name
+             release:
+               tag_name: ':regex:v[0-9]*[02468]\.' # matching only even major version number
+       do:
+         call_workflow: do_something
+         # following context variables are available
+         #   git_repo
+         #   git_tag
+   
+
 Function: addRepoToInstallation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1350,6 +1391,43 @@ See below for example
          status:
            state: pending
            description: Honeydipper is scanning your commit ...
+   
+
+Function: getCommit
+^^^^^^^^^^^^^^^^^^^
+
+This function will get the commit info for a git ref, a commmit hash, a branch or a tag.
+
+
+**Input Contexts**
+
+:git_repo: The repo where the commit is for, e.g. :code:`myorg/myrepo`
+
+:git_ref: A commit hash, a branch ref or a tag ref, with prefix :code:`refs/`, e.g. :code:`refs/heads/main` etc.
+
+**Export Contexts**
+
+:git_commit_full: The git commit full sha for the new commit.
+
+:git_commit: The short git commit sha for the commit.
+
+:git_commit_message: The commit message for the commit.
+
+:git_commit_info: The whole commit info data structure.
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   workflows:
+     getCommitInfo:
+       with:
+         git_repo: myorg/myrepo
+       steps:
+         - call_function: github.getCommit
+           with:
+             git_ref: heads/mybranch
    
 
 Function: getContent
@@ -2272,6 +2350,16 @@ No description is available for this entry!
 
 Function: getEscalationPolicies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+No description is available for this entry!
+
+Function: getEscalationPolicyIDsByTag
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+No description is available for this entry!
+
+Function: getTagId
+^^^^^^^^^^^^^^^^^^
 
 No description is available for this entry!
 
