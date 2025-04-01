@@ -716,6 +716,108 @@ Function: api
 This is a generic function to make a circleci API call with the configured token. This function is meant to be used for defining other functions.
 
 
+Function: create_context
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+This function will create a new context with the given name.
+
+
+**Input Contexts**
+
+:circleci_context_name: The name of the context to create.
+
+Function: list_context
+^^^^^^^^^^^^^^^^^^^^^^
+
+This function will return a list of contexts owned by the owner. Please use the workflow to manage the pagination.
+
+
+**Input Contexts**
+
+:circleci-api-page-token: Continue the query after a page break.
+
+Function: put_context_variable
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This function will add a new secret variable to the named context.
+
+
+**Input Contexts**
+
+:circleci_context.id: The UUID of the context in your org.
+
+:circleci_context_id: The UUID of the context in your org, only used when :code:`circleci_context.id` is not available.
+
+:circleci_var.name: The name of the variable.
+
+:circleci_var.value: The value of the variable.
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   rules:
+     - when:
+         driver: webhook
+         if_match:
+           url: /from_circle
+         export:
+           circleci_context_id: $event.form.context.0
+           circleci_var:
+             name: $event.form.var.0
+             value: $event.form.value.0
+       do:
+         call_workflow: add_variable_circle
+   
+   workflows:
+     add_variable_circle:
+       call_function: circleci.put_context_variable
+   
+
+Function: put_project_variable
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This function will add a new secret variable to the named context.
+
+
+**Input Contexts**
+
+:vcs: The VCS system integrated with this circle project, :code:`github` (default) or :code:`bitbucket`.
+
+:git_repo: The repo that the secret variable is for, e.g. :code:`myorg/myrepo`, takes precedent over :code:`repo`.
+
+:repo: The repo name that the secret variable is for, without the org, e.g. :code:`myrepo`
+
+:circleci_var.name: The name of the variable.
+
+:circleci_var.value: The value of the variable.
+
+See below for example
+
+.. code-block:: yaml
+
+   ---
+   rules:
+     - when:
+         driver: webhook
+         if_match:
+           url: /from_circle
+         export:
+           git_repo: $event.form.git_repo.0
+           circleci_var:
+             name: $event.form.var.0
+             value: $event.form.value.0
+       do:
+         call_workflow: add_variable_circle
+   
+   workflows:
+     add_variable_circle:
+       call_function: circleci.put_project_variable
+       with:
+         vcs: gh
+   
+
 Function: start_pipeline
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -2931,6 +3033,68 @@ This is used by :code:`slashcommand` workflow and :code:`notify` workflow to aut
            #     - UYUJH56
            #     - U78JS2F
            #     - '#public_channel1' # remain unchanged if missing from the map
+   
+
+circleci_get_context
+--------------------
+
+This workflows wrap around the :code:`circleci.list_context` function so get the detail of a context with name :code:`circleci_context_name`. You can use :code:`circleci_create_missing_context` flag to ensure a context is created if needed.
+
+
+For example,
+
+.. code-block:: yaml
+
+   ---
+   system:
+     my_circleci:
+       extends:
+         - circleci
+       data:
+         token: xxx
+         org: myorg
+         vcs: gh
+         owner-type: account
+   
+   workflows:
+     with:
+       circleci_system: my_circleci
+       circleci_context_name: my_context
+     steps:
+       - call_workflow: circleci_get_context
+       - call_function: my_circleci.put_context_variable
+         with:
+           circle_var:
+             name: foo
+             value: bar
+   
+
+circleci_list_context
+---------------------
+
+This workflows wrap around the :code:`circleci.list_context` function so multiple page of results can be combined.
+
+
+For example,
+
+.. code-block:: yaml
+
+   ---
+   system:
+     my_circleci:
+       extends:
+         - circleci
+       data:
+         token: xxx
+         org: myorg
+         vcs: gh
+         owner-type: account
+   
+   workflows:
+     test:
+       call_workflow: circleci_list_context
+       with:
+         circleci_system: my_circleci
    
 
 circleci_pipeline
