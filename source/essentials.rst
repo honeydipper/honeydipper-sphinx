@@ -341,6 +341,53 @@ See below for a simple example
              job: $data.metadta.name
    
 
+redis-cache
+-----------
+
+redis-cache driver is used internally to enabling caching
+capabilities for daemon and drivers. It offers a few RPCs for the
+other parts of the system to take advantage of the cache.
+
+
+**Configurations**
+
+:connection: The parameters used for connecting to the redis including `Addr`, `Username`, `Password` and `DB`.
+
+:connection.TLS.Enabled: Accept true/false. Use TLS to connect to the redis server, support TLS1.2 and above.
+
+:connection.TLS.InsecureSkipVerify: Accept true/false. Skip verifying the server certificate. If enabled, TLS is susceptible to machine-in-the-middle attacks.
+
+:connection.TLS.VerifyServerName: When connecting using an IP instead of DNS name, you can override the name used for verifying
+against the server certificate. Or, use :code:`"*"` to accept any name or certificates without
+a valid common name as DNS name, no subject altertive names defined.
+
+
+:connection.TLS.CACerts: A list of CA certificates used for verifying the server certificate. These certificates are added on top
+of system defined CA certificates. See `Here <https://pkg.go.dev/crypto/x509#SystemCertPool>`_ for description
+on where the system defined CA certificates are.
+
+
+See below for an example
+
+.. code-block:: yaml
+
+   ---
+   drivers:
+     redis-cache:
+       connection:
+         Addr: 192.168.2.10:6379
+         DB: 2
+         Password: ENC[gcloud-kms,...masked]
+         TLS:
+           Enabled: true
+           VerifyServerName: "*"
+           CACerts:
+             - |
+               ----- BEGIN CERTIFICATE -----
+               ...
+               ----- END CERTIFICATE -----
+   
+
 redislock
 ---------
 
@@ -2754,6 +2801,12 @@ a :code:`Custom Integrations` to integrate with slack.
 
 :interact_path: The path portion of the webhook url for receiving interactive component requests, by default :code:`/slack/interact`
 
+:events_path: The path for the webhook that receives slack events calls, by default :code:`/slack/events`
+
+:_slack_user_id_regex: A regex expression representation of slack app's user id, used for detecting mentioning, for example :code:`regex:U08M6UDCPGG`
+
+:slack_user_id: The slack app's user id, for example :code:`U08M6UDCPGG`
+
 For example
 
 .. code-block:: yaml
@@ -2792,6 +2845,32 @@ To configure the integration in slack,
    https://myhoneydipper.com/webhook/slash_interact?token=...masked...
 
 
+Trigger: app_mention_event
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This trigger receives slack events when the slack app is mentioned.
+
+
+**Export Contexts**
+
+:slack_payload: The payload of the message event
+
+:slack_user_id: The user ID of the slack app
+
+:notify: pre-sets the channel ID of IM ID for reply messages
+
+Trigger: event_verification
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The trigger is used for responding to the slack events webhook
+verification.
+
+
+Trigger: events
+^^^^^^^^^^^^^^^
+
+This is a catch all trigger for all slack events.
+
 Trigger: interact
 ^^^^^^^^^^^^^^^^^
 
@@ -2803,6 +2882,23 @@ trigger, so in normal cases, it is not necessary to use this trigger directly.
 **Export Contexts**
 
 :slack_payload: The payload of the interactive response
+
+Trigger: message_event
+^^^^^^^^^^^^^^^^^^^^^^
+
+This trigger receives slack events when chat messages are posted in a
+chat or IM where the slack bot is a member. The slack bot's own
+messages will be ignored. Messages that Mention the app is not
+included, there is a separate trigger for that.
+
+
+**Export Contexts**
+
+:slack_payload: The payload of the message event
+
+:slack_user_id: The user ID of the slack app
+
+:notify: pre-sets the channel ID of IM ID for reply messages
 
 Trigger: slashcommand
 ^^^^^^^^^^^^^^^^^^^^^
@@ -2866,6 +2962,11 @@ See below snippet for example
 
 Function: add_response
 ^^^^^^^^^^^^^^^^^^^^^^
+
+No description is available for this entry!
+
+Function: api
+^^^^^^^^^^^^^
 
 No description is available for this entry!
 
